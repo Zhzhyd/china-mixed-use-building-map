@@ -788,9 +788,20 @@
   });
 
   map.on("error", function (e) {
-    console.error("MapLibre error:", e);
+    const err = e && e.error ? e.error : e;
+    console.error("MapLibre error:", err);
+    console.error("  message:", err && err.message);
+    console.error("  source:", e && e.sourceId);
+    console.error("  tile:", e && e.tile);
+    console.error("  status:", err && err.status);
+    console.error("  url:", err && err.url);
     const body = document.getElementById("status-body");
-    if (body) body.innerHTML = `<span style="color:#ff8a8a;">Map error — see console.</span>`;
+    if (body) {
+      body.innerHTML =
+        `<span style="color:#ff8a8a;">Map error</span><br/>` +
+        `${(err && err.message) || "see console"}<br/>` +
+        `source: ${(e && e.sourceId) || "?"}`;
+    }
   });
 </script>
 </body>
