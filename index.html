@@ -380,6 +380,10 @@
 
         <div class="ctrl-block">
           <label class="check-row">
+            <input type="checkbox" id="show-vectors" checked />
+            Show building vectors
+          </label>
+          <label class="check-row" style="margin-top:6px;">
             <input type="checkbox" id="show-borders" />
             Show vector borders
           </label>
@@ -452,22 +456,59 @@
   };
   const BF1_OTHER_COLOR = "#5b647a";
 
-  // 12 joint BF1+BF2 combinations retained in the analytical schema,
-  // plus an "Other" bucket. Colors chosen so pure-category cells echo
-  // the BF1 palette while mixed cells get distinctive intermediate hues.
-  const BF12_COMBOS = [
-    { key: "Residential–Residential",       bf1: "Residential",    bf2: "Residential",    color: "#F4A261" },
-    { key: "Residential–Commercial",        bf1: "Residential",    bf2: "Commercial",     color: "#FFD166" },
-    { key: "Industrial–Industrial",         bf1: "Industrial",     bf2: "Industrial",     color: "#8D6E63" },
-    { key: "Industrial–Commercial",         bf1: "Industrial",     bf2: "Commercial",     color: "#C49A6C" },
-    { key: "Commercial–Commercial",         bf1: "Commercial",     bf2: "Commercial",     color: "#2EC4B6" },
-    { key: "Public–Public",                 bf1: "Public",         bf2: "Public",         color: "#A8E063" },
-    { key: "Public–Residential",            bf1: "Public",         bf2: "Residential",    color: "#CDE881" },
-    { key: "Transport–Transport",           bf1: "Transport",      bf2: "Transport",      color: "#90A4AE" },
-    { key: "Education–Education",           bf1: "Education",      bf2: "Education",      color: "#B388EB" },
-    { key: "Medical–Medical",               bf1: "Medical",        bf2: "Medical",        color: "#F178B6" },
-    { key: "Administrative–Administrative", bf1: "Administrative", bf2: "Administrative", color: "#E63946" }
+  // Blend two hex colors by weight `t` (0 → c1, 1 → c2).
+  function blendHex(c1, c2, t) {
+    const a = parseInt(c1.slice(1), 16), b = parseInt(c2.slice(1), 16);
+    const ar = (a>>16)&255, ag = (a>>8)&255, ab = a&255;
+    const br = (b>>16)&255, bg = (b>>8)&255, bb = b&255;
+    const r = Math.round(ar + (br-ar)*t);
+    const g = Math.round(ag + (bg-ag)*t);
+    const bl = Math.round(ab + (bb-ab)*t);
+    return "#" + ((1<<24) | (r<<16) | (g<<8) | bl).toString(16).slice(1);
+  }
+
+  // All 29 logically valid Context–Intrinsic combinations from
+  // Supplementary Table S1 (BF1–BF2). The BF1 family hue is the base;
+  // mixed combos shift 40% toward the BF2 family hue. Pure (X–X)
+  // cells keep the pure BF1 colour.
+  const BF12_DEFS = [
+    ["Residential",    "Residential"],
+    ["Residential",    "Commercial"],
+    ["Residential",    "Industrial"],
+    ["Residential",    "Medical"],
+    ["Residential",    "Transport"],
+    ["Residential",    "Administrative"],
+    ["Industrial",     "Industrial"],
+    ["Industrial",     "Commercial"],
+    ["Industrial",     "Transport"],
+    ["Industrial",     "Administrative"],
+    ["Public",         "Public"],
+    ["Public",         "Commercial"],
+    ["Public",         "Residential"],
+    ["Public",         "Industrial"],
+    ["Public",         "Transport"],
+    ["Transport",      "Transport"],
+    ["Transport",      "Commercial"],
+    ["Education",      "Education"],
+    ["Education",      "Residential"],
+    ["Education",      "Commercial"],
+    ["Education",      "Public"],
+    ["Education",      "Industrial"],
+    ["Education",      "Transport"],
+    ["Commercial",     "Commercial"],
+    ["Commercial",     "Industrial"],
+    ["Commercial",     "Administrative"],
+    ["Commercial",     "Transport"],
+    ["Medical",        "Medical"],
+    ["Administrative", "Administrative"]
   ];
+  const BF12_COMBOS = BF12_DEFS.map(([bf1, bf2]) => ({
+    key: `${bf1}–${bf2}`,
+    bf1, bf2,
+    color: bf1 === bf2
+      ? BF1_COLORS[bf1]
+      : blendHex(BF1_COLORS[bf1], BF1_COLORS[bf2], 0.40)
+  }));
   const BF12_OTHER_COLOR = "#4a5169";
 
   // ============================================================
@@ -635,8 +676,8 @@
         }
       ]
     },
-    center: [110.5, 32.0],
-    zoom: 7.2,
+    center: [121.4737, 31.2304],
+    zoom: 12.3,
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM
   });
@@ -686,6 +727,13 @@
     const op = on ? 0.55 : 0.0;
     if (map.getLayer("agg-outline"))       map.setPaintProperty("agg-outline", "line-opacity", op);
     if (map.getLayer("buildings-outline")) map.setPaintProperty("buildings-outline", "line-opacity", op);
+  }
+
+  function setVectorsVisible(on) {
+    const vis = on ? "visible" : "none";
+    for (const id of ["agg-fill", "agg-outline", "buildings-fill", "buildings-outline"]) {
+      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", vis);
+    }
   }
 
   // ============================================================
@@ -776,6 +824,9 @@
   document.getElementById("show-borders").addEventListener("change", function () {
     setBordersVisible(this.checked);
   });
+  document.getElementById("show-vectors").addEventListener("change", function () {
+    setVectorsVisible(this.checked);
+  });
 
   map.on("zoomend", updateStatus);
   map.on("moveend", updateStatus);
@@ -783,6 +834,7 @@
   map.on("load", function () {
     setRenderMode("BF1");
     setBordersVisible(false);
+    setVectorsVisible(true);
     updateStatus();
   });
 
