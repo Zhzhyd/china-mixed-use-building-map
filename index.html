@@ -1,719 +1,796 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>China Building Function PMTiles</title>
+  <title>China Building Function Atlas — Nationwide Visualization</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <link
     href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"
     rel="stylesheet"
   />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Serif+Pro:wght@400;600&display=swap" rel="stylesheet">
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
 
   <style>
+    :root {
+      --bg-0: #07090f;
+      --bg-1: #0d1220;
+      --bg-2: #141a2a;
+      --bg-3: #1c2338;
+      --border: #232a40;
+      --text-0: #eef2fa;
+      --text-1: #b8c1d6;
+      --text-2: #7a8399;
+      --accent: #6aa6ff;
+      --accent-2: #f1c40f;
+    }
+
+    * { box-sizing: border-box; }
+
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
-      font-family: Arial, "Microsoft YaHei", sans-serif;
-      background: #f7f7f2;
+      background: var(--bg-0);
+      color: var(--text-0);
+      font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
     }
 
-    #map {
-      width: 100%;
-      height: 100%;
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .page {
+      width: 80%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 56px 0 80px;
     }
 
-    .panel {
-      position: absolute;
-      left: 12px;
-      top: 12px;
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 12px 14px;
-      border-radius: 10px;
+    header.hero {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 28px;
+      margin-bottom: 36px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-family: "Source Serif Pro", Georgia, serif;
+      font-size: 38px;
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0 0 14px;
+      letter-spacing: -0.01em;
+    }
+
+    .authors {
+      color: var(--text-2);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .affil {
+      color: var(--text-2);
+      font-size: 13px;
+    }
+
+    section.block {
+      margin-bottom: 38px;
+    }
+
+    section.block h2 {
+      font-family: "Source Serif Pro", Georgia, serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-0);
+      margin: 0 0 12px;
+    }
+
+    section.block p {
+      color: var(--text-1);
+      margin: 0 0 12px;
+      max-width: 90ch;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    .map-wrap {
+      position: relative;
+      width: 100%;
+      height: 720px;
+      max-height: 80vh;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.55);
+    }
+
+    #map { width: 100%; height: 100%; background: var(--bg-1); }
+
+    /* MapLibre control restyle for dark mode */
+    .maplibregl-ctrl-group {
+      background: rgba(20,26,42,0.92) !important;
+      border: 1px solid var(--border) !important;
+    }
+    .maplibregl-ctrl-group button {
+      background-color: transparent !important;
+    }
+    .maplibregl-ctrl-group button + button {
+      border-top: 1px solid var(--border) !important;
+    }
+    .maplibregl-ctrl-group button span {
+      filter: invert(1) brightness(1.1);
+    }
+    .maplibregl-ctrl-scale {
+      background: rgba(20,26,42,0.85) !important;
+      color: var(--text-1) !important;
+      border-color: var(--border) !important;
+    }
+    .maplibregl-ctrl-attrib {
+      background: rgba(7,9,15,0.72) !important;
+      color: var(--text-2) !important;
+    }
+    .maplibregl-ctrl-attrib a { color: var(--text-1) !important; }
+    .maplibregl-popup-content {
+      background: var(--bg-2) !important;
+      color: var(--text-0) !important;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       font-size: 13px;
       line-height: 1.6;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-      min-width: 280px;
-      max-width: 390px;
+    }
+    .maplibregl-popup-tip {
+      border-top-color: var(--bg-2) !important;
+      border-bottom-color: var(--bg-2) !important;
     }
 
-    .panel-title {
-      font-weight: bold;
-      font-size: 15px;
+    .map-panel {
+      position: absolute;
+      z-index: 5;
+      background: rgba(13, 18, 32, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      backdrop-filter: blur(8px);
+      color: var(--text-0);
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+    }
+
+    .map-panel .label {
+      color: var(--text-2);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
       margin-bottom: 6px;
     }
 
-    .panel-sub {
-      color: #666;
-      font-size: 12px;
-      margin-bottom: 8px;
+    #control-panel {
+      top: 14px;
+      left: 14px;
+      min-width: 230px;
+      max-width: 280px;
     }
 
-    .control-row {
-      margin-top: 8px;
-    }
-
-    select {
+    #control-panel select {
       width: 100%;
-      padding: 5px 6px;
+      background: var(--bg-3);
+      color: var(--text-0);
+      border: 1px solid var(--border);
       border-radius: 6px;
-      border: 1px solid #aaa;
-      background: #fff;
+      padding: 6px 8px;
+      font: inherit;
       font-size: 13px;
+      outline: none;
     }
+    #control-panel select:focus { border-color: var(--accent); }
 
-    button {
-      padding: 5px 9px;
-      margin-right: 5px;
-      margin-top: 6px;
-      border-radius: 6px;
-      border: 1px solid #999;
-      background: #f3f3f3;
+    .ctrl-block { margin-bottom: 12px; }
+    .ctrl-block:last-child { margin-bottom: 0; }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-1);
       cursor: pointer;
-      font-size: 12px;
+      user-select: none;
+    }
+    .check-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 14px;
+      height: 14px;
     }
 
-    button:hover {
-      background: #e8e8e8;
+    .basemap-toggle {
+      top: 14px;
+      right: 60px;
+      display: flex;
+      gap: 0;
+      padding: 4px;
+      align-items: center;
+    }
+    .basemap-toggle button {
+      background: transparent;
+      border: none;
+      color: var(--text-2);
+      padding: 5px 12px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 6px;
+      letter-spacing: 0.03em;
+    }
+    .basemap-toggle button.active {
+      background: var(--accent);
+      color: #0a0e1a;
+      font-weight: 600;
     }
 
-    .legend {
-      position: absolute;
-      left: 12px;
-      bottom: 24px;
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 12px;
-      line-height: 1.7;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-      min-width: 170px;
-      max-height: 45vh;
+    #legend {
+      bottom: 14px;
+      left: 14px;
+      min-width: 200px;
+      max-width: 260px;
+      max-height: 55%;
       overflow-y: auto;
     }
-
-    .legend-title {
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
+    #legend::-webkit-scrollbar { width: 6px; }
+    #legend::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 9px;
+      font-size: 12.5px;
+      color: var(--text-1);
+      padding: 2px 0;
     }
-
-    .legend-color {
+    .legend-swatch {
       width: 14px;
       height: 14px;
-      border: 1px solid #777;
-      display: inline-block;
+      border-radius: 3px;
       flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
-    .status {
-      position: absolute;
-      right: 12px;
-      bottom: 24px;
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 8px 12px;
-      border-radius: 10px;
+    #status {
+      bottom: 14px;
+      right: 14px;
+      color: var(--text-1);
       font-size: 12px;
-      line-height: 1.6;
-      color: #555;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-      max-width: 360px;
+      min-width: 200px;
+    }
+    #status .em { color: var(--accent-2); font-weight: 600; }
+
+    footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 13px;
     }
 
-    .em {
-      font-weight: bold;
-      color: #b33a3a;
+    @media (max-width: 1100px) {
+      .page { width: 92%; }
+      h1 { font-size: 30px; }
+      .map-wrap { height: 580px; }
     }
   </style>
 </head>
 
 <body>
-<div id="map"></div>
 
-<div class="panel">
-  <div class="panel-title">中国建筑功能可视化</div>
-  <div class="panel-sub">
-    z0–z11：聚合网格图层<br />
-    z12–z13.5：单栋建筑图层<br />
-    PMTiles 数据源：Cloudflare R2<br />
-    页面最大缩放等级：13.5
-  </div>
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">Research Visualization · Building-Scale Functional Atlas</div>
+    <h1>Building-scale functional mixing reveals a decarbonization window in Chinese cities</h1>
+    <div class="authors">Jiayi Li, Zhen Zhang, Xin Huang, Xiaofeng Pan, Song Ma, Xiangyun Xiong, Liangpei Zhang</div>
+    <div class="affil">Wuhan University · Shenzhen Ecological &amp; Environmental Monitoring Center · LIESMARS</div>
+  </header>
 
-  <div class="control-row">
-    <label for="render-mode"><b>渲染方式</b></label>
-    <select id="render-mode">
-      <option value="BF1">按 BF1 渲染</option>
-      <option value="BF2">按 BF2 渲染</option>
-      <option value="BF12">BF1 + BF2 联合渲染</option>
-    </select>
-  </div>
+  <section class="block">
+    <h2>About the study</h2>
+    <p>
+      Mixed land use is widely promoted as a route to urban decarbonization, yet its benefits remain
+      poorly quantified because mixing is typically measured with coarse proxies that cannot resolve
+      individual buildings — the units that organize energy use and mobility demand. This study builds
+      the first nationwide, building-resolved functional atlas for China (~200 million buildings),
+      enabled by sub-meter (0.5&nbsp;m) remote-sensing imagery integrated with semantic and vector
+      context.
+    </p>
+    <p>
+      Using a spatial econometric design that recovers non-linearity and spatial spillovers, the study
+      quantifies how mixing at neighborhood versus building resolution relates to grid-level
+      fossil-fuel operational CO₂. The analysis reveals a tri-phasic <em>friction–synergy–saturation</em>
+      response with a bounded synergy window (<b>BFMI ≈ 0.14–0.72</b>), implying a national mitigation
+      potential on the order of 10² Mt&nbsp;CO₂&nbsp;yr⁻¹.
+    </p>
+    <div class="pill-row">
+      <span class="pill">~200 million buildings</span>
+      <span class="pill">0.5 m remote sensing</span>
+      <span class="pill">Two-tier functional ontology</span>
+      <span class="pill">31 international comparison cities</span>
+    </div>
+  </section>
 
-  <div class="control-row">
-    <button id="btn-china">全国视角</button>
-    <button id="btn-building">单栋建筑视角</button>
-  </div>
-</div>
+  <section class="block">
+    <h2>What this page shows</h2>
+    <p>
+      An interactive view of the nationwide atlas. Each building (or aggregated grid cell at coarse
+      zoom) carries a <b>two-tier functional label</b>:
+      <b>BF1</b> — the <em>contextual</em> label, capturing the dominant land-use setting and planning
+      intent of the surrounding district; and <b>BF2</b> — the <em>intrinsic</em> label, capturing the
+      building's own dominant function.
+    </p>
+    <p>
+      Zoom out (z&nbsp;6.5–11) to see China at the aggregated 2&nbsp;km grid scale. Zoom in (z&nbsp;12–14)
+      to inspect individual building footprints, where contextual and intrinsic labels can diverge — a
+      dormitory inside an educational campus, ground-floor commerce under upper-floor residences, or
+      housing embedded in an industrial park. Use the render-mode selector to color by BF1 alone, or
+      by the joint BF1+BF2 combination that drives the analysis.
+    </p>
+  </section>
 
-<div class="legend" id="legend">
-  <div class="legend-title">图例</div>
-  <div id="legend-content"></div>
-</div>
+  <section class="block">
+    <h2>Interactive map</h2>
 
-<div class="status" id="status">
-  正在初始化地图...
+    <div class="map-wrap">
+      <div id="map"></div>
+
+      <div id="control-panel" class="map-panel">
+        <div class="ctrl-block">
+          <div class="label">Render mode</div>
+          <select id="render-mode">
+            <option value="BF1">BF1 — contextual</option>
+            <option value="BF12">BF1 + BF2 — joint</option>
+          </select>
+        </div>
+
+        <div class="ctrl-block">
+          <label class="check-row">
+            <input type="checkbox" id="show-borders" />
+            Show vector borders
+          </label>
+        </div>
+      </div>
+
+      <div class="basemap-toggle map-panel" role="tablist">
+        <button id="bm-esri" class="active" type="button">Esri Dark</button>
+        <button id="bm-sat" type="button">Satellite</button>
+      </div>
+
+      <div id="legend" class="map-panel">
+        <div class="label">Legend</div>
+        <div id="legend-content"></div>
+      </div>
+
+      <div id="status" class="map-panel">
+        <div class="label">Status</div>
+        <div id="status-body">Initialising map…</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Data hosted as PMTiles on Cloudflare R2. Building atlas © the authors.
+    Esri World Dark Gray Canvas tiles © Esri. Satellite tiles © Google.
+  </footer>
 </div>
 
 <script>
   // ============================================================
-  // 1. PMTiles 文件路径：Cloudflare R2 自定义域名
+  // 1. PMTiles sources
   // ============================================================
   const AGG_PMTILES_URL =
     "https://cbmfpmtiles.nolimitopia.com/china/china_agg_grid_z0_z11_nodrop.pmtiles";
-
   const BUILDINGS_PMTILES_URL =
     "https://cbmfpmtiles.nolimitopia.com/china/china_buildings_z11_z13.pmtiles";
 
-  // ============================================================
-  // 2. 注册 PMTiles 协议
-  // ============================================================
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol("pmtiles", protocol.tile);
-
   protocol.add(new pmtiles.PMTiles(AGG_PMTILES_URL));
   protocol.add(new pmtiles.PMTiles(BUILDINGS_PMTILES_URL));
 
   // ============================================================
-  // 3. 配色表
+  // 2. Category variant tables
+  //    Each canonical category lists all encodings that may appear
+  //    in the PMTiles data (Chinese, English, single-letter code).
   // ============================================================
-  const bf1Colors = {
-    "住宅": "#8FAADC",
-    "商业": "#D9A441",
-    "工业": "#B07D62",
-    "公共": "#8BAE7F",
-    "教育": "#9B8AC1",
-    "交通": "#A6A6A6",
-    "行政": "#C97B7B",
-    "医疗": "#D98BA6",
-    "其他": "#C9C2B8",
-    "空": "#D0D0D0",
-
-    "Residential": "#8FAADC",
-    "Commercial": "#D9A441",
-    "Industrial": "#B07D62",
-    "Public": "#8BAE7F",
-    "Education": "#9B8AC1",
-    "Transportation": "#A6A6A6",
-    "Administrative": "#C97B7B",
-    "Medical": "#D98BA6",
-
-    "R": "#8FAADC",
-    "C": "#D9A441",
-    "M": "#B07D62",
-    "P": "#8BAE7F",
-    "E": "#9B8AC1",
-    "T": "#A6A6A6",
-    "A": "#C97B7B",
-    "H": "#D98BA6",
-    "S": "#B7B7A4",
-    "U": "#A2D2FF"
+  const BF_VARIANTS = {
+    Residential:    ["Residential", "住宅", "R"],
+    Commercial:     ["Commercial", "商业", "C"],
+    Industrial:     ["Industrial", "工业", "M"],
+    Public:         ["Public", "Public open space", "公共", "P"],
+    Education:      ["Education", "教育", "E"],
+    Transport:      ["Transportation", "Transport", "交通", "T"],
+    Administrative: ["Administrative", "行政", "A"],
+    Medical:        ["Medical", "Healthcare", "医疗", "H"]
   };
 
-  const bf2Colors = {
-    "住宅": "#7EA1D8",
-    "商业": "#D7B46A",
-    "工业": "#A9775C",
-    "公共": "#7EA374",
-    "教育": "#A093C8",
-    "交通": "#9C9C9C",
-    "行政": "#C27474",
-    "医疗": "#D585A0",
-    "其他": "#BEB6AA",
-    "空": "#D0D0D0",
-
-    "Residential": "#7EA1D8",
-    "Commercial": "#D7B46A",
-    "Industrial": "#A9775C",
-    "Public": "#7EA374",
-    "Education": "#A093C8",
-    "Transportation": "#9C9C9C",
-    "Administrative": "#C27474",
-    "Medical": "#D585A0",
-
-    "R": "#7EA1D8",
-    "C": "#D7B46A",
-    "M": "#A9775C",
-    "P": "#7EA374",
-    "E": "#A093C8",
-    "T": "#9C9C9C",
-    "A": "#C27474",
-    "H": "#D585A0",
-    "S": "#B5B5A5",
-    "U": "#9BC9E8"
+  // BF1 palette — distinguishable on dark basemap, evocative of category
+  const BF1_COLORS = {
+    Residential:    "#F4A261",  // warm sand — homes
+    Commercial:     "#2EC4B6",  // teal — business
+    Industrial:     "#8D6E63",  // brown — factories
+    Public:         "#A8E063",  // light green — parks / open space
+    Education:      "#B388EB",  // violet — academic
+    Transport:      "#90A4AE",  // cool gray — infrastructure
+    Administrative: "#E63946",  // red — civic
+    Medical:        "#F178B6"   // pink — health
   };
+  const BF1_OTHER_COLOR = "#5b647a";
 
-  function makeMatchColorExpression(fieldName, colorDict, defaultColor) {
-    const expr = [
-      "match",
-      ["to-string", ["coalesce", ["get", fieldName], "空"]]
-    ];
+  // 12 joint BF1+BF2 combinations retained in the analytical schema,
+  // plus an "Other" bucket. Colors chosen so pure-category cells echo
+  // the BF1 palette while mixed cells get distinctive intermediate hues.
+  const BF12_COMBOS = [
+    { key: "Residential–Residential",       bf1: "Residential",    bf2: "Residential",    color: "#F4A261" },
+    { key: "Residential–Commercial",        bf1: "Residential",    bf2: "Commercial",     color: "#FFD166" },
+    { key: "Industrial–Industrial",         bf1: "Industrial",     bf2: "Industrial",     color: "#8D6E63" },
+    { key: "Industrial–Commercial",         bf1: "Industrial",     bf2: "Commercial",     color: "#C49A6C" },
+    { key: "Commercial–Commercial",         bf1: "Commercial",     bf2: "Commercial",     color: "#2EC4B6" },
+    { key: "Public–Public",                 bf1: "Public",         bf2: "Public",         color: "#A8E063" },
+    { key: "Public–Residential",            bf1: "Public",         bf2: "Residential",    color: "#CDE881" },
+    { key: "Transport–Transport",           bf1: "Transport",      bf2: "Transport",      color: "#90A4AE" },
+    { key: "Education–Education",           bf1: "Education",      bf2: "Education",      color: "#B388EB" },
+    { key: "Medical–Medical",               bf1: "Medical",        bf2: "Medical",        color: "#F178B6" },
+    { key: "Administrative–Administrative", bf1: "Administrative", bf2: "Administrative", color: "#E63946" }
+  ];
+  const BF12_OTHER_COLOR = "#4a5169";
 
-    for (const [key, color] of Object.entries(colorDict)) {
-      expr.push(key, color);
+  // ============================================================
+  // 3. Build colour expressions
+  // ============================================================
+  function bf1Expression(field) {
+    // ["match", to-string(field), [variants...], color, ..., default]
+    const expr = ["match", ["to-string", ["coalesce", ["get", field], ""]]];
+    for (const [cat, variants] of Object.entries(BF_VARIANTS)) {
+      expr.push(variants, BF1_COLORS[cat]);
     }
-
-    expr.push(defaultColor);
+    expr.push(BF1_OTHER_COLOR);
     return expr;
   }
 
-  // 聚合图层字段
-  const bf1ColorAgg = makeMatchColorExpression("dom_BF1", bf1Colors, "#C9C2B8");
-  const bf2ColorAgg = makeMatchColorExpression("dom_BF2", bf2Colors, "#C9C2B8");
+  function bf12Expression(field1, field2) {
+    // Nested matches: outer on BF1, inner on BF2 per BF1 category.
+    // Group combos by their BF1.
+    const groups = {};
+    for (const c of BF12_COMBOS) {
+      (groups[c.bf1] ||= []).push(c);
+    }
 
-  // 单栋建筑字段
-  const bf1ColorBuilding = makeMatchColorExpression("BF1", bf1Colors, "#C9C2B8");
-  const bf2ColorBuilding = makeMatchColorExpression("BF2", bf2Colors, "#C9C2B8");
+    const outer = ["match", ["to-string", ["coalesce", ["get", field1], ""]]];
+    for (const [bf1Cat, combos] of Object.entries(groups)) {
+      const inner = ["match", ["to-string", ["coalesce", ["get", field2], ""]]];
+      for (const combo of combos) {
+        inner.push(BF_VARIANTS[combo.bf2], combo.color);
+      }
+      inner.push(BF12_OTHER_COLOR);
+      outer.push(BF_VARIANTS[bf1Cat], inner);
+    }
+    outer.push(BF12_OTHER_COLOR);
+    return outer;
+  }
+
+  // Precomputed expressions
+  const exprAggBF1     = bf1Expression("dom_BF1");
+  const exprBldgBF1    = bf1Expression("BF1");
+  const exprAggBF12    = bf12Expression("dom_BF1", "dom_BF2");
+  const exprBldgBF12   = bf12Expression("BF1", "BF2");
 
   // ============================================================
-  // 4. 初始化地图
+  // 4. Basemap definitions
   // ============================================================
+  const BASEMAPS = {
+    esri: {
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+      ],
+      attribution: "© Esri — World Dark Gray Canvas"
+    },
+    sat: {
+      tiles: [
+        "https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+        "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+        "https://mt2.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+        "https://mt3.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+      ],
+      attribution: "Imagery © Google"
+    }
+  };
+
+  // ============================================================
+  // 5. Initialise map
+  // ============================================================
+  const MIN_ZOOM = 6.5;
+  const MAX_ZOOM = 14;
+
   const map = new maplibregl.Map({
     container: "map",
-
     style: {
       version: 8,
-
+      glyphs: undefined,
       sources: {
-        "osm-raster": {
+        basemap: {
           type: "raster",
-          tiles: [
-            "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          ],
+          tiles: BASEMAPS.esri.tiles,
           tileSize: 256,
-          attribution: "© OpenStreetMap contributors"
+          attribution: BASEMAPS.esri.attribution
         },
-
         "china-agg": {
           type: "vector",
           url: "pmtiles://" + AGG_PMTILES_URL
         },
-
         "china-buildings": {
           type: "vector",
           url: "pmtiles://" + BUILDINGS_PMTILES_URL
         }
       },
-
       layers: [
         {
-          id: "osm-raster-layer",
+          id: "basemap-layer",
           type: "raster",
-          source: "osm-raster",
-          paint: {
-            "raster-opacity": 0.72
-          }
+          source: "basemap",
+          paint: { "raster-opacity": 1.0 }
         },
 
-        // --------------------------------------------------------
-        // z0-z11：聚合图层
-        // maxzoom=12 表示显示到 z11.x
-        // --------------------------------------------------------
+        // z6.5–z12: aggregated grid
         {
           id: "agg-fill",
           type: "fill",
           source: "china-agg",
           "source-layer": "agg_grid",
-          minzoom: 0,
+          minzoom: 6.5,
           maxzoom: 12,
           paint: {
-            "fill-color": bf1ColorAgg,
+            "fill-color": exprAggBF1,
             "fill-opacity": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              0, 0.36,
-              4, 0.48,
-              8, 0.62,
-              11, 0.76
+              "interpolate", ["linear"], ["zoom"],
+              6.5, 0.55,
+              9, 0.70,
+              11, 0.82
             ]
           }
         },
-
         {
           id: "agg-outline",
           type: "line",
           source: "china-agg",
           "source-layer": "agg_grid",
-          minzoom: 0,
+          minzoom: 6.5,
           maxzoom: 12,
           paint: {
-            "line-color": "#ffffff",
-            "line-opacity": 0.70,
-            "line-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              0, 0.03,
-              6, 0.18,
-              10, 0.45,
-              11, 0.65
-            ]
+            "line-color": "#cfd6e6",
+            "line-opacity": 0.0,        // hidden by default
+            "line-width": 0.6
           }
         },
 
-        // --------------------------------------------------------
-        // z12-z13.5：单栋建筑图层
-        // PMTiles 实际切到 z13，z13-z13.5 为 overzoom
-        // --------------------------------------------------------
+        // z12–z14: individual buildings (real to z13, overzoom to z14)
         {
           id: "buildings-fill",
           type: "fill",
           source: "china-buildings",
           "source-layer": "buildings",
           minzoom: 12,
-          maxzoom: 14,
+          maxzoom: 14.001,
           paint: {
-            "fill-color": bf1ColorBuilding,
+            "fill-color": exprBldgBF1,
             "fill-opacity": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              12, 0.68,
-              13, 0.84,
-              13.5, 0.88
+              "interpolate", ["linear"], ["zoom"],
+              12, 0.78,
+              13, 0.90,
+              14, 0.94
             ]
           }
         },
-
         {
           id: "buildings-outline",
           type: "line",
           source: "china-buildings",
           "source-layer": "buildings",
           minzoom: 12,
-          maxzoom: 14,
+          maxzoom: 14.001,
           paint: {
-            "line-color": "#2f2f2f",
-            "line-opacity": 0.78,
+            "line-color": "#cfd6e6",
+            "line-opacity": 0.0,        // hidden by default
             "line-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              12, 0.20,
-              13, 0.55,
-              13.5, 0.85
+              "interpolate", ["linear"], ["zoom"],
+              12, 0.3,
+              13, 0.6,
+              14, 0.9
             ]
           }
         }
       ]
     },
-
-    center: [104.0, 35.5],
-    zoom: 4.2,
-
-    minZoom: 0,
-    maxZoom: 13.5
+    center: [110.5, 32.0],
+    zoom: 7.2,
+    minZoom: MIN_ZOOM,
+    maxZoom: MAX_ZOOM
   });
 
-  map.addControl(new maplibregl.NavigationControl(), "top-right");
-  map.addControl(new maplibregl.ScaleControl({
-    maxWidth: 120,
-    unit: "metric"
-  }), "bottom-right");
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+  map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: "metric" }), "bottom-right");
 
   // ============================================================
-  // 5. 渲染模式切换
+  // 6. Basemap switching
+  // ============================================================
+  function setBasemap(which) {
+    const cfg = BASEMAPS[which];
+    if (!cfg) return;
+    // Replace the basemap source by recreating it. MapLibre lets us
+    // setTiles on raster sources at runtime.
+    const src = map.getSource("basemap");
+    if (src && src.setTiles) {
+      src.setTiles(cfg.tiles);
+    }
+    document.getElementById("bm-esri").classList.toggle("active", which === "esri");
+    document.getElementById("bm-sat").classList.toggle("active", which === "sat");
+  }
+  document.getElementById("bm-esri").addEventListener("click", () => setBasemap("esri"));
+  document.getElementById("bm-sat").addEventListener("click", () => setBasemap("sat"));
+
+  // ============================================================
+  // 7. Render mode
   // ============================================================
   function setRenderMode(mode) {
     if (!map.isStyleLoaded()) return;
 
     if (mode === "BF1") {
-      map.setPaintProperty("agg-fill", "fill-color", bf1ColorAgg);
-      map.setPaintProperty("agg-outline", "line-color", "#ffffff");
-      map.setPaintProperty("agg-outline", "line-width", [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        0, 0.03,
-        6, 0.18,
-        10, 0.45,
-        11, 0.65
-      ]);
-
-      map.setPaintProperty("buildings-fill", "fill-color", bf1ColorBuilding);
-      map.setPaintProperty("buildings-outline", "line-color", "#2f2f2f");
-      map.setPaintProperty("buildings-outline", "line-width", [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        12, 0.20,
-        13, 0.55,
-        13.5, 0.85
-      ]);
-
-      updateLegend("BF1");
+      map.setPaintProperty("agg-fill", "fill-color", exprAggBF1);
+      map.setPaintProperty("buildings-fill", "fill-color", exprBldgBF1);
+    } else if (mode === "BF12") {
+      map.setPaintProperty("agg-fill", "fill-color", exprAggBF12);
+      map.setPaintProperty("buildings-fill", "fill-color", exprBldgBF12);
     }
-
-    else if (mode === "BF2") {
-      map.setPaintProperty("agg-fill", "fill-color", bf2ColorAgg);
-      map.setPaintProperty("agg-outline", "line-color", "#ffffff");
-      map.setPaintProperty("agg-outline", "line-width", [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        0, 0.03,
-        6, 0.18,
-        10, 0.45,
-        11, 0.65
-      ]);
-
-      map.setPaintProperty("buildings-fill", "fill-color", bf2ColorBuilding);
-      map.setPaintProperty("buildings-outline", "line-color", "#2f2f2f");
-      map.setPaintProperty("buildings-outline", "line-width", [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        12, 0.20,
-        13, 0.55,
-        13.5, 0.85
-      ]);
-
-      updateLegend("BF2");
-    }
-
-    else if (mode === "BF12") {
-      // 联合渲染：填充颜色 = BF1，边界颜色 = BF2
-      map.setPaintProperty("agg-fill", "fill-color", bf1ColorAgg);
-      map.setPaintProperty("agg-outline", "line-color", bf2ColorAgg);
-      map.setPaintProperty("agg-outline", "line-width", [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        0, 0.08,
-        6, 0.30,
-        10, 0.80,
-        11, 1.10
-      ]);
-
-      map.setPaintProperty("buildings-fill", "fill-color", bf1ColorBuilding);
-      map.setPaintProperty("buildings-outline", "line-color", bf2ColorBuilding);
-      map.setPaintProperty("buildings-outline", "line-width", [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        12, 0.35,
-        13, 0.95,
-        13.5, 1.25
-      ]);
-
-      updateLegend("BF12");
-    }
+    updateLegend(mode);
+    updateStatus();
   }
 
   // ============================================================
-  // 6. 图例
+  // 8. Border toggle
   // ============================================================
-  function legendItemsFromDict(dict) {
-    let html = "";
+  function setBordersVisible(on) {
+    const op = on ? 0.55 : 0.0;
+    if (map.getLayer("agg-outline"))       map.setPaintProperty("agg-outline", "line-opacity", op);
+    if (map.getLayer("buildings-outline")) map.setPaintProperty("buildings-outline", "line-opacity", op);
+  }
 
-    const preferredKeys = [
-      "住宅", "商业", "工业", "公共", "教育", "交通", "行政", "医疗",
-      "R", "C", "M", "P", "E", "T", "A", "H", "S", "U"
-    ];
-
-    const used = new Set();
-
-    for (const key of preferredKeys) {
-      if (dict[key] && !used.has(key)) {
-        html += `
-          <div class="legend-item">
-            <span class="legend-color" style="background:${dict[key]}"></span>${key}
-          </div>
-        `;
-        used.add(key);
-      }
-    }
-
-    html += `
-      <div class="legend-item">
-        <span class="legend-color" style="background:#C9C2B8"></span>其他/未匹配
-      </div>
-    `;
-
-    return html;
+  // ============================================================
+  // 9. Legend
+  // ============================================================
+  function legendItem(color, label) {
+    return `<div class="legend-item"><span class="legend-swatch" style="background:${color}"></span>${label}</div>`;
   }
 
   function updateLegend(mode) {
-    const legendContent = document.getElementById("legend-content");
-
+    const el = document.getElementById("legend-content");
     if (mode === "BF1") {
-      legendContent.innerHTML =
-        `<div style="margin-bottom:4px;">颜色表示 BF1</div>` +
-        legendItemsFromDict(bf1Colors);
-    }
-
-    else if (mode === "BF2") {
-      legendContent.innerHTML =
-        `<div style="margin-bottom:4px;">颜色表示 BF2</div>` +
-        legendItemsFromDict(bf2Colors);
-    }
-
-    else {
-      legendContent.innerHTML = `
-        <div style="margin-bottom:6px;">
-          联合渲染规则：<br />
-          <b>填充颜色</b> = BF1<br />
-          <b>边界颜色</b> = BF2
-        </div>
-        <div class="legend-item">
-          <span class="legend-color" style="background:#8FAADC"></span>填充：BF1 示例
-        </div>
-        <div class="legend-item">
-          <span class="legend-color" style="background:#ffffff;border:2px solid #D7B46A"></span>边界：BF2 示例
-        </div>
-      `;
+      let html = "";
+      for (const cat of Object.keys(BF1_COLORS)) {
+        html += legendItem(BF1_COLORS[cat], cat);
+      }
+      html += legendItem(BF1_OTHER_COLOR, "Other / unmatched");
+      el.innerHTML = html;
+    } else {
+      let html = "";
+      for (const c of BF12_COMBOS) {
+        html += legendItem(c.color, c.key);
+      }
+      html += legendItem(BF12_OTHER_COLOR, "Other");
+      el.innerHTML = html;
     }
   }
 
   // ============================================================
-  // 7. 状态栏
+  // 10. Status
   // ============================================================
   function updateStatus() {
     const z = map.getZoom();
     const mode = document.getElementById("render-mode").value;
+    let layerTxt;
+    if (z < 12)      layerTxt = "Aggregated 2 km grid";
+    else if (z < 13) layerTxt = "Individual buildings (z12)";
+    else if (z < 14) layerTxt = "Individual buildings (z13)";
+    else             layerTxt = "Individual buildings (z13 overzoom)";
 
-    let layerText;
-    if (z < 12) {
-      layerText = "当前图层：聚合网格图层";
-    } else {
-      layerText = "当前图层：单栋建筑图层";
-    }
-
-    document.getElementById("status").innerHTML =
-      `${layerText}<br />` +
-      `当前缩放：<span class="em">${z.toFixed(2)}</span><br />` +
-      `渲染方式：<span class="em">${mode}</span><br />` +
-      `数据源：Cloudflare R2<br />` +
-      `最大缩放限制：z13.5`;
+    document.getElementById("status-body").innerHTML =
+      `Layer: <span class="em">${layerTxt}</span><br/>` +
+      `Zoom: <span class="em">${z.toFixed(2)}</span><br/>` +
+      `Mode: <span class="em">${mode}</span>`;
   }
 
   // ============================================================
-  // 8. 弹窗查询
+  // 11. Popups
   // ============================================================
   map.on("click", "agg-fill", function (e) {
-    if (!e.features || e.features.length === 0) return;
-
+    if (!e.features || !e.features.length) return;
     const p = e.features[0].properties;
-
     const html = `
-      <div style="font-size:13px;line-height:1.7;min-width:190px;">
-        <b>聚合网格属性</b><br/>
-        网格 ID：${p.grid_id || "空"}<br/>
-        建筑数量：${p.n || 0}<br/>
-        主导 BF1：${p.dom_BF1 || "空"}<br/>
-        主导 BF2：${p.dom_BF2 || "空"}<br/>
-        主导 BF1|BF2：${p.dom_BF12 || "空"}<br/>
-        BF1 占比：${p.BF1_ratio || 0}<br/>
-        BF2 占比：${p.BF2_ratio || 0}
-      </div>
+      <div><b>Aggregated grid cell</b></div>
+      Grid ID: ${p.grid_id ?? "—"}<br/>
+      Buildings: ${p.n ?? 0}<br/>
+      Dominant BF1: ${p.dom_BF1 ?? "—"}<br/>
+      Dominant BF2: ${p.dom_BF2 ?? "—"}<br/>
+      Dominant BF1|BF2: ${p.dom_BF12 ?? "—"}<br/>
+      BF1 share: ${p.BF1_ratio ?? "—"}<br/>
+      BF2 share: ${p.BF2_ratio ?? "—"}
     `;
-
-    new maplibregl.Popup()
-      .setLngLat(e.lngLat)
-      .setHTML(html)
-      .addTo(map);
+    new maplibregl.Popup({ closeButton: true }).setLngLat(e.lngLat).setHTML(html).addTo(map);
   });
 
   map.on("click", "buildings-fill", function (e) {
-    if (!e.features || e.features.length === 0) return;
-
+    if (!e.features || !e.features.length) return;
     const p = e.features[0].properties;
-
     const html = `
-      <div style="font-size:13px;line-height:1.7;min-width:160px;">
-        <b>单栋建筑属性</b><br/>
-        BF1：${p.BF1 || "空"}<br/>
-        BF2：${p.BF2 || "空"}
-      </div>
+      <div><b>Building</b></div>
+      BF1 (contextual): ${p.BF1 ?? "—"}<br/>
+      BF2 (intrinsic): ${p.BF2 ?? "—"}
     `;
-
-    new maplibregl.Popup()
-      .setLngLat(e.lngLat)
-      .setHTML(html)
-      .addTo(map);
+    new maplibregl.Popup({ closeButton: true }).setLngLat(e.lngLat).setHTML(html).addTo(map);
   });
 
-  map.on("mouseenter", "agg-fill", function () {
-    map.getCanvas().style.cursor = "pointer";
-  });
-
-  map.on("mouseleave", "agg-fill", function () {
-    map.getCanvas().style.cursor = "";
-  });
-
-  map.on("mouseenter", "buildings-fill", function () {
-    map.getCanvas().style.cursor = "pointer";
-  });
-
-  map.on("mouseleave", "buildings-fill", function () {
-    map.getCanvas().style.cursor = "";
-  });
+  for (const lyr of ["agg-fill", "buildings-fill"]) {
+    map.on("mouseenter", lyr, () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", lyr, () => { map.getCanvas().style.cursor = ""; });
+  }
 
   // ============================================================
-  // 9. 控件事件
+  // 12. Wire controls
   // ============================================================
   document.getElementById("render-mode").addEventListener("change", function () {
     setRenderMode(this.value);
-    updateStatus();
   });
-
-  document.getElementById("btn-china").addEventListener("click", function () {
-    map.flyTo({
-      center: [104.0, 35.5],
-      zoom: 4.2,
-      speed: 1.2
-    });
-  });
-
-  document.getElementById("btn-building").addEventListener("click", function () {
-    // 默认跳到北京城区作为单栋建筑检查视角
-    map.flyTo({
-      center: [116.4074, 39.9042],
-      zoom: 12.8,
-      speed: 1.2
-    });
+  document.getElementById("show-borders").addEventListener("change", function () {
+    setBordersVisible(this.checked);
   });
 
   map.on("zoomend", updateStatus);
   map.on("moveend", updateStatus);
 
   map.on("load", function () {
-    updateLegend("BF1");
+    setRenderMode("BF1");
+    setBordersVisible(false);
     updateStatus();
-
-    console.log("AGG PMTiles:", AGG_PMTILES_URL);
-    console.log("BUILDINGS PMTiles:", BUILDINGS_PMTILES_URL);
-    console.log("地图加载完成");
   });
 
   map.on("error", function (e) {
     console.error("MapLibre error:", e);
-    document.getElementById("status").innerHTML =
-      `<span class="em">地图加载发生错误</span><br />请按 F12 查看 Console。`;
+    const body = document.getElementById("status-body");
+    if (body) body.innerHTML = `<span style="color:#ff8a8a;">Map error — see console.</span>`;
   });
 </script>
 </body>
