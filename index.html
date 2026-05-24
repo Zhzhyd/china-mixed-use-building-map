@@ -194,18 +194,34 @@
       margin-bottom: 6px;
     }
 
-    #control-panel {
+    #left-stack {
+      position: absolute;
       top: 14px;
       left: 14px;
-      min-width: 230px;
-      max-width: 280px;
+      bottom: 14px;
+      width: 240px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none; /* let map handle clicks in gaps */
+    }
+    #left-stack > .map-panel {
+      position: static;
+      width: 100%;
+      pointer-events: auto;
     }
 
+    #control-panel { flex: 0 0 auto; }
     #overview-panel {
-      top: 200px;
-      left: 14px;
-      width: 240px;
+      flex: 0 0 auto;
       padding: 8px 8px 6px;
+    }
+    #legend {
+      flex: 1 1 auto;
+      min-height: 60px;
+      max-height: none;
+      overflow-y: auto;
     }
 
     #overview-map {
@@ -279,14 +295,6 @@
       font-weight: 600;
     }
 
-    #legend {
-      bottom: 14px;
-      left: 14px;
-      min-width: 200px;
-      max-width: 260px;
-      max-height: 55%;
-      overflow-y: auto;
-    }
     #legend::-webkit-scrollbar { width: 6px; }
     #legend::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
@@ -390,40 +398,42 @@
     <div class="map-wrap">
       <div id="map"></div>
 
-      <div id="control-panel" class="map-panel">
-        <div class="ctrl-block">
-          <div class="label">Render mode</div>
-          <select id="render-mode">
-            <option value="BF1">BF1 — contextual</option>
-            <option value="BF12">BF1 + BF2 — joint</option>
-          </select>
+      <div id="left-stack">
+        <div id="control-panel" class="map-panel">
+          <div class="ctrl-block">
+            <div class="label">Render mode</div>
+            <select id="render-mode">
+              <option value="BF1">BF1 — contextual</option>
+              <option value="BF12">BF1 + BF2 — joint</option>
+            </select>
+          </div>
+
+          <div class="ctrl-block">
+            <label class="check-row">
+              <input type="checkbox" id="show-vectors" checked />
+              Show building vectors
+            </label>
+            <label class="check-row" style="margin-top:6px;">
+              <input type="checkbox" id="show-borders" />
+              Show vector borders
+            </label>
+          </div>
         </div>
 
-        <div class="ctrl-block">
-          <label class="check-row">
-            <input type="checkbox" id="show-vectors" checked />
-            Show building vectors
-          </label>
-          <label class="check-row" style="margin-top:6px;">
-            <input type="checkbox" id="show-borders" />
-            Show vector borders
-          </label>
+        <div id="overview-panel" class="map-panel">
+          <div class="label">Locator</div>
+          <div id="overview-map"></div>
         </div>
-      </div>
 
-      <div id="overview-panel" class="map-panel">
-        <div class="label">Locator</div>
-        <div id="overview-map"></div>
+        <div id="legend" class="map-panel">
+          <div class="label">Legend</div>
+          <div id="legend-content"></div>
+        </div>
       </div>
 
       <div class="basemap-toggle map-panel" role="tablist">
         <button id="bm-esri" class="active" type="button">Esri Dark</button>
         <button id="bm-sat" type="button">Satellite</button>
-      </div>
-
-      <div id="legend" class="map-panel">
-        <div class="label">Legend</div>
-        <div id="legend-content"></div>
       </div>
 
       <div id="status" class="map-panel">
