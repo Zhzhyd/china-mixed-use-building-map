@@ -201,6 +201,27 @@
       max-width: 280px;
     }
 
+    #overview-panel {
+      top: 200px;
+      left: 14px;
+      width: 240px;
+      padding: 8px 8px 6px;
+    }
+
+    #overview-map {
+      width: 100%;
+      height: 158px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #0a0e1a;
+      cursor: crosshair;
+      margin-top: 4px;
+    }
+
+    #overview-map canvas { display: block; }
+    #overview-map .maplibregl-canvas-container { cursor: crosshair !important; }
+    #overview-map .maplibregl-ctrl-attrib { display: none !important; }
+
     #control-panel select {
       width: 100%;
       background: var(--bg-3);
@@ -388,6 +409,11 @@
             Show vector borders
           </label>
         </div>
+      </div>
+
+      <div id="overview-panel" class="map-panel">
+        <div class="label">Locator</div>
+        <div id="overview-map"></div>
       </div>
 
       <div class="basemap-toggle map-panel" role="tablist">
@@ -836,6 +862,125 @@
     setBordersVisible(false);
     setVectorsVisible(true);
     updateStatus();
+  });
+
+  // ============================================================
+  // 13. Locator overview map
+  // ============================================================
+  const overview = new maplibregl.Map({
+    container: "overview-map",
+    style: {
+      version: 8,
+      sources: {
+        basemap: {
+          type: "raster",
+          tiles: BASEMAPS.esri.tiles,
+          tileSize: 256
+        }
+      },
+      layers: [
+        { id: "ov-base", type: "raster", source: "basemap" }
+      ]
+    },
+    center: [104, 36],
+    zoom: 2.4,
+    interactive: false,
+    attributionControl: false
+  });
+
+  // Lock the overview to a fixed China-wide view
+  function fitOverviewToChina() {
+    overview.fitBounds([[73, 17], [136, 54]], { padding: 4, animate: false });
+  }
+
+  overview.on("load", function () {
+    fitOverviewToChina();
+
+    overview.addSource("viewport-box", {
+      type: "geojson",
+      data: emptyPolygon()
+    });
+    overview.addSource("viewport-box-center", {
+      type: "geojson",
+      data: { type: "Feature", geometry: { type: "Point", coordinates: [104, 35] } }
+    });
+    overview.addLayer({
+      id: "viewport-box-line",
+      type: "line",
+      source: "viewport-box",
+      paint: {
+        "line-color": "#f1c40f",
+        "line-width": 2,
+        "line-opacity": 0.95
+      }
+    });
+    overview.addLayer({
+      id: "viewport-box-dot",
+      type: "circle",
+      source: "viewport-box-center",
+      paint: {
+        "circle-radius": 3,
+        "circle-color": "#f1c40f",
+        "circle-stroke-color": "#0d1220",
+        "circle-stroke-width": 1
+      }
+    });
+    updateOverviewBox();
+  });
+
+  function emptyPolygon() {
+    return {
+      type: "Feature",
+      geometry: { type: "Polygon", coordinates: [[[0,0],[0,0],[0,0],[0,0],[0,0]]] }
+    };
+  }
+
+  function updateOverviewBox() {
+    if (!overview.isStyleLoaded()) return;
+    const b = map.getBounds();
+    const sw = b.getSouthWest(), ne = b.getNorthEast();
+    const center = map.getCenter();
+    const poly = {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [sw.lng, sw.lat],
+          [ne.lng, sw.lat],
+          [ne.lng, ne.lat],
+          [sw.lng, ne.lat],
+          [sw.lng, sw.lat]
+        ]]
+      }
+    };
+    const dot = {
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [center.lng, center.lat] }
+    };
+    const src1 = overview.getSource("viewport-box");
+    if (src1) src1.setData(poly);
+    const src2 = overview.getSource("viewport-box-center");
+    if (src2) src2.setData(dot);
+  }
+
+  map.on("move", updateOverviewBox);
+  map.on("zoom", updateOverviewBox);
+
+  // Re-lock the overview if anything ever shifts it
+  window.addEventListener("resize", fitOverviewToChina);
+
+  // Click on the overview pans the main map (same zoom)
+  document.getElementById("overview-map").addEventListener("click", function (e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const ll = overview.unproject([x, y]);
+    map.flyTo({
+      center: [ll.lng, ll.lat],
+      zoom: map.getZoom(),
+      speed: 1.4,
+      essential: true
+    });
   });
 
   map.on("error", function (e) {
