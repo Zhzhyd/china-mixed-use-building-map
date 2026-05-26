@@ -211,10 +211,11 @@
       margin-top: 22px;
     }
     .chart-row > .chart-block {
-      flex: 1 1 0;
       min-width: 0;
       margin-top: 0;
     }
+    .chart-row > .chart-block.chart-bf1-col  { flex: 3 1 0; }
+    .chart-row > .chart-block.chart-bf12-col { flex: 7 1 0; }
     @media (max-width: 980px) {
       .chart-row { flex-direction: column; }
     }
@@ -354,9 +355,9 @@
       padding: 8px 8px 6px;
     }
     #legend, #legend-val {
-      flex: 1 1 auto;
-      min-height: 60px;
-      max-height: none;
+      flex: 0 1 auto;
+      min-height: 0;
+      max-height: 100%;
       overflow-y: auto;
     }
 
@@ -632,7 +633,7 @@
     </div>
 
     <div class="chart-row">
-      <div class="chart-block">
+      <div class="chart-block chart-bf1-col">
         <div class="chart-title">Per-class accuracy — 8 BF1 categories (contextual)</div>
         <div class="chart-sub">Performance evaluated against manual labels on 1,981 validated buildings (single-axis BF1).</div>
         <div class="metric-toggles" data-target="chart-bf1">
@@ -641,10 +642,10 @@
           <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
           <label><input type="checkbox" value="Kappa" checked><span class="swatch" style="background:#B388EB"></span>Kappa</label>
         </div>
-        <div class="chart-svg-wrap"><svg id="chart-bf1"></svg></div>
+        <div class="chart-svg-wrap chart-fit"><svg id="chart-bf1"></svg></div>
       </div>
 
-      <div class="chart-block">
+      <div class="chart-block chart-bf12-col">
         <div class="chart-title">Per-class accuracy — 29 BF1×BF2 joint combinations</div>
         <div class="chart-sub">Full Context–Intrinsic combination space (Supplementary Table S1).</div>
         <div class="metric-toggles" data-target="chart-bf12">
@@ -653,7 +654,7 @@
           <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
           <label><input type="checkbox" value="Kappa" checked><span class="swatch" style="background:#B388EB"></span>Kappa</label>
         </div>
-        <div class="chart-svg-wrap"><svg id="chart-bf12"></svg></div>
+        <div class="chart-svg-wrap chart-fit"><svg id="chart-bf12"></svg></div>
       </div>
     </div>
 
@@ -1606,9 +1607,9 @@
     update();
   }
 
-  wireChart('.metric-toggles[data-target="chart-bf1"]',  'chart-bf1',  BF1_CLASS_DATA,  { barGroupW: 26, groupGap: 8,  height: 240 });
-  wireChart('.metric-toggles[data-target="chart-bf12"]', 'chart-bf12', BF12_CLASS_DATA, { barGroupW: 14, groupGap: 4,  height: 240 });
-  wireChart('.metric-toggles[data-target="chart-prov"]', 'chart-prov', PROVINCE_DATA,   { fitWidth: true,  groupGap: 4, height: 260 });
+  wireChart('.metric-toggles[data-target="chart-bf1"]',  'chart-bf1',  BF1_CLASS_DATA,  { fitWidth: true, groupGap: 10, height: 240 });
+  wireChart('.metric-toggles[data-target="chart-bf12"]', 'chart-bf12', BF12_CLASS_DATA, { fitWidth: true, groupGap: 5,  height: 240 });
+  wireChart('.metric-toggles[data-target="chart-prov"]', 'chart-prov', PROVINCE_DATA,   { fitWidth: true, groupGap: 4,  height: 260 });
 
   map.on("error", function (e) {
     const err = e && e.error ? e.error : e;
