@@ -639,11 +639,14 @@
       building's own dominant function.
     </p>
     <p>
-      Zoom out (z&nbsp;6.5–11) to see China at the aggregated 2&nbsp;km grid scale. Zoom in (z&nbsp;12–14)
-      to inspect individual building footprints, where contextual and intrinsic labels can diverge — a
-      dormitory inside an educational campus, ground-floor commerce under upper-floor residences, or
-      housing embedded in an industrial park. Use the render-mode selector to color by BF1 alone, or
-      by the joint BF1+BF2 combination that drives the analysis.
+      Zoom out (z&nbsp;6.5–11) to see the nationwide <b>Building Functional Mixing Index (BFMI)</b> at
+      grid scale — already normalised to <code>[0, 1]</code>, where higher values indicate stronger
+      intra-cell functional mixing. The bounded synergy window identified in the paper sits at
+      <b>BFMI ≈ 0.14–0.72</b>. Zoom in (z&nbsp;12–14) to inspect individual building footprints, where
+      contextual and intrinsic labels can diverge — a dormitory inside an educational campus,
+      ground-floor commerce under upper-floor residences, or housing embedded in an industrial park.
+      Use the render-mode selector to color buildings by BF1 alone, or by the joint BF1+BF2
+      combination that drives the analysis.
     </p>
 
     <div class="map-wrap" style="margin-top:16px;">
@@ -806,14 +809,14 @@
   // ============================================================
   // 1. PMTiles sources
   // ============================================================
-  const AGG_PMTILES_URL =
-    "https://www.nolimitopia.com/cbmf_pmtiles/china_agg_grid_z0_z11_nodrop.pmtiles";
+  const BFMI_PMTILES_URL =
+    "https://www.nolimitopia.com/cbmf_pmtiles/china_bfmi_grid_z6_z11.pmtiles";
   const BUILDINGS_PMTILES_URL =
     "https://www.nolimitopia.com/cbmf_pmtiles/china_buildings_z11_z13.pmtiles";
 
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol("pmtiles", protocol.tile);
-  protocol.add(new pmtiles.PMTiles(AGG_PMTILES_URL));
+  protocol.add(new pmtiles.PMTiles(BFMI_PMTILES_URL));
   protocol.add(new pmtiles.PMTiles(BUILDINGS_PMTILES_URL));
 
   // ============================================================
@@ -978,9 +981,9 @@
           tileSize: 256,
           attribution: BASEMAPS.esri.attribution
         },
-        "china-agg": {
+        "china-bfmi": {
           type: "vector",
-          url: "pmtiles://" + AGG_PMTILES_URL
+          url: "pmtiles://" + BFMI_PMTILES_URL
         },
         "china-buildings": {
           type: "vector",
@@ -995,35 +998,44 @@
           paint: { "raster-opacity": 1.0 }
         },
 
-        // z6.5–z12: aggregated grid
+        // z6.5–z12: BFMI grid (building functional mixing index, 0..1).
+        // Coloured with a viridis-like ramp; opacity scales with zoom.
         {
           id: "agg-fill",
           type: "fill",
-          source: "china-agg",
-          "source-layer": "agg_grid",
+          source: "china-bfmi",
+          "source-layer": "bfmi_grid",
           minzoom: 6.5,
           maxzoom: 12,
           paint: {
-            "fill-color": exprAggBF1,
+            "fill-color": [
+              "interpolate", ["linear"], ["coalesce", ["to-number", ["get", "BFMI"]], -1],
+              -0.5,  "#3a4256",
+              0.0,   "#440154",
+              0.14,  "#3b528b",
+              0.43,  "#21908d",
+              0.72,  "#5dc863",
+              1.0,   "#fde725"
+            ],
             "fill-opacity": [
               "interpolate", ["linear"], ["zoom"],
-              6.5, 0.55,
-              9, 0.70,
-              11, 0.82
+              6.5, 0.65,
+              9,   0.78,
+              11,  0.85
             ]
           }
         },
         {
           id: "agg-outline",
           type: "line",
-          source: "china-agg",
-          "source-layer": "agg_grid",
+          source: "china-bfmi",
+          "source-layer": "bfmi_grid",
           minzoom: 6.5,
           maxzoom: 12,
           paint: {
             "line-color": "#cfd6e6",
             "line-opacity": 0.0,        // hidden by default
-            "line-width": 0.6
+            "line-width": 0.5
           }
         },
 
@@ -1094,11 +1106,11 @@
   function setRenderMode(mode) {
     if (!map.isStyleLoaded()) return;
 
+    // BFMI grid is independent of the BF1/BF12 selector; only the
+    // individual-building layer flips its colour expression.
     if (mode === "BF1") {
-      map.setPaintProperty("agg-fill", "fill-color", exprAggBF1);
       map.setPaintProperty("buildings-fill", "fill-color", exprBldgBF1);
     } else if (mode === "BF12") {
-      map.setPaintProperty("agg-fill", "fill-color", exprAggBF12);
       map.setPaintProperty("buildings-fill", "fill-color", exprBldgBF12);
     }
     updateLegend(mode);
@@ -1130,21 +1142,32 @@
 
   function updateLegend(mode) {
     const el = document.getElementById("legend-content");
+    let html = `
+      <div style="font-size:11px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin:0 0 4px;">
+        BFMI grid (z6.5–12)
+      </div>
+      <div style="height:9px;border-radius:3px;margin-bottom:3px;
+        background:linear-gradient(to right,#440154 0%,#3b528b 14%,#21908d 43%,#5dc863 72%,#fde725 100%);
+        border:1px solid rgba(255,255,255,0.08);"></div>
+      <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-2);margin-bottom:10px;">
+        <span>0.0</span><span>0.14</span><span>0.43</span><span>0.72</span><span>1.0</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin-bottom:4px;">
+        Buildings (z12+)
+      </div>
+    `;
     if (mode === "BF1") {
-      let html = "";
       for (const cat of Object.keys(BF1_COLORS)) {
         html += legendItem(BF1_COLORS[cat], cat);
       }
       html += legendItem(BF1_OTHER_COLOR, "Other / unmatched");
-      el.innerHTML = html;
     } else {
-      let html = "";
       for (const c of BF12_COMBOS) {
         html += legendItem(c.color, c.key);
       }
       html += legendItem(BF12_OTHER_COLOR, "Other");
-      el.innerHTML = html;
     }
+    el.innerHTML = html;
   }
 
   // ============================================================
@@ -1154,7 +1177,7 @@
     const z = map.getZoom();
     const mode = document.getElementById("render-mode").value;
     let layerTxt;
-    if (z < 12)      layerTxt = "Aggregated 2 km grid";
+    if (z < 12)      layerTxt = "BFMI grid";
     else if (z < 13) layerTxt = "Individual buildings (z12)";
     else if (z < 14) layerTxt = "Individual buildings (z13)";
     else             layerTxt = "Individual buildings (z13 overzoom)";
@@ -1171,15 +1194,10 @@
   map.on("click", "agg-fill", function (e) {
     if (!e.features || !e.features.length) return;
     const p = e.features[0].properties;
+    const v = Number(p.BFMI);
     const html = `
-      <div><b>Aggregated grid cell</b></div>
-      Grid ID: ${p.grid_id ?? "—"}<br/>
-      Buildings: ${p.n ?? 0}<br/>
-      Dominant BF1: ${p.dom_BF1 ?? "—"}<br/>
-      Dominant BF2: ${p.dom_BF2 ?? "—"}<br/>
-      Dominant BF1|BF2: ${p.dom_BF12 ?? "—"}<br/>
-      BF1 share: ${p.BF1_ratio ?? "—"}<br/>
-      BF2 share: ${p.BF2_ratio ?? "—"}
+      <div><b>BFMI grid cell</b></div>
+      Building Functional Mixing Index: ${Number.isFinite(v) ? v.toFixed(4) : "—"}
     `;
     new maplibregl.Popup({ closeButton: true }).setLngLat(e.lngLat).setHTML(html).addTo(map);
   });
