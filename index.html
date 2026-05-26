@@ -1345,13 +1345,20 @@
   overview.on("load", function () {
     fitOverviewToChina();
 
+    // Seed with the main map's actual centre so the locator does not
+    // momentarily show the default central-China placeholder before the
+    // first updateOverviewBox() call lands.
+    const initCenter = map.getCenter();
     overview.addSource("viewport-box", {
       type: "geojson",
       data: emptyPolygon()
     });
     overview.addSource("viewport-box-center", {
       type: "geojson",
-      data: { type: "Feature", geometry: { type: "Point", coordinates: [104, 35] } }
+      data: {
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [initCenter.lng, initCenter.lat] }
+      }
     });
     overview.addLayer({
       id: "viewport-box-line",
@@ -1418,6 +1425,12 @@
 
   map.on("move", updateOverviewBox);
   map.on("zoom", updateOverviewBox);
+  // Belt-and-braces: idle fires after the map's first internal resize,
+  // when both getBounds() and getCenter() are guaranteed to reflect the
+  // constructor-provided viewport. Without this, the locator dot can
+  // stay at its initial placeholder coordinate until the user pans.
+  map.once("idle",     updateOverviewBox);
+  overview.once("idle", updateOverviewBox);
 
   // Re-lock the overview if anything ever shifts it
   window.addEventListener("resize", fitOverviewToChina);
