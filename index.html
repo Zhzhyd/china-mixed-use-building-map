@@ -13,7 +13,6 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
-  <script src="https://unpkg.com/protomaps-themes-base@3.0.1/dist/protomaps-themes-base.js"></script>
 
   <style>
     :root {
@@ -569,7 +568,7 @@
       </div>
 
       <div class="basemap-toggle map-panel" role="tablist">
-        <button id="bm-esri" class="active" type="button">Protomaps</button>
+        <button id="bm-esri" class="active" type="button">Esri Dark</button>
         <button id="bm-sat" type="button">Satellite</button>
       </div>
 
@@ -622,7 +621,7 @@
       </div>
 
       <div class="basemap-toggle map-panel" role="tablist">
-        <button id="bm-esri-val" class="active" type="button">Protomaps</button>
+        <button id="bm-esri-val" class="active" type="button">Esri Dark</button>
         <button id="bm-sat-val" type="button">Satellite</button>
       </div>
 
@@ -674,7 +673,7 @@
 
   <footer>
     Data hosted as PMTiles on Cloudflare R2. Building atlas © the authors.
-    Basemap © Protomaps © OpenStreetMap contributors. Satellite tiles © Google. Locator inset © Esri.
+    Esri World Dark Gray Canvas tiles © Esri. Satellite tiles © Google.
   </footer>
 </div>
 
@@ -687,33 +686,10 @@
   const BUILDINGS_PMTILES_URL =
     "https://www.nolimitopia.com/cbmf_pmtiles/china_buildings_z11_z13.pmtiles";
 
-  const PROTOMAPS_BASEMAP_URL =
-    "https://demo-bucket.protomaps.com/v4.pmtiles";
-
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol("pmtiles", protocol.tile);
   protocol.add(new pmtiles.PMTiles(AGG_PMTILES_URL));
   protocol.add(new pmtiles.PMTiles(BUILDINGS_PMTILES_URL));
-  protocol.add(new pmtiles.PMTiles(PROTOMAPS_BASEMAP_URL));
-
-  // Protomaps vector basemap configuration (dark theme)
-  const PROTOMAPS_GLYPHS = "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf";
-  const PROTOMAPS_SPRITE = "https://protomaps.github.io/basemaps-assets/sprites/v4/dark";
-  const PROTOMAPS_THEME  = "dark";
-  function protomapsBasemapLayers() {
-    // protomaps-themes-base v3 exposes a default function returning a layer array.
-    const fn = (window.protomaps_themes_base && window.protomaps_themes_base.default)
-      ? window.protomaps_themes_base.default
-      : window.protomaps_themes_base;
-    return fn("protomaps", PROTOMAPS_THEME);
-  }
-  const PROTOMAPS_LAYER_IDS_CACHE = { ids: null };
-  function protomapsLayerIds() {
-    if (!PROTOMAPS_LAYER_IDS_CACHE.ids) {
-      PROTOMAPS_LAYER_IDS_CACHE.ids = protomapsBasemapLayers().map(l => l.id);
-    }
-    return PROTOMAPS_LAYER_IDS_CACHE.ids;
-  }
 
   // ============================================================
   // 2. Category variant tables
@@ -870,19 +846,12 @@
     container: "map",
     style: {
       version: 8,
-      glyphs: PROTOMAPS_GLYPHS,
-      sprite: PROTOMAPS_SPRITE,
       sources: {
-        protomaps: {
-          type: "vector",
-          url: "pmtiles://" + PROTOMAPS_BASEMAP_URL,
-          attribution: "© <a href=\"https://protomaps.com\">Protomaps</a> © <a href=\"https://openstreetmap.org\">OpenStreetMap</a>"
-        },
-        satellite: {
+        basemap: {
           type: "raster",
-          tiles: BASEMAPS.sat.tiles,
+          tiles: BASEMAPS.esri.tiles,
           tileSize: 256,
-          attribution: BASEMAPS.sat.attribution
+          attribution: BASEMAPS.esri.attribution
         },
         "china-agg": {
           type: "vector",
@@ -895,13 +864,11 @@
       },
       layers: [
         {
-          id: "satellite-layer",
+          id: "basemap-layer",
           type: "raster",
-          source: "satellite",
-          layout: { visibility: "none" },
+          source: "basemap",
           paint: { "raster-opacity": 1.0 }
         },
-        ...protomapsBasemapLayers(),
 
         // z6.5–z12: aggregated grid
         {
@@ -985,24 +952,15 @@
   // ============================================================
   // 6. Basemap switching
   // ============================================================
-  function toggleProtomapsVis(mapInstance, satLayerId, show) {
-    const satVis  = show ? "none"    : "visible";
-    const protoVis = show ? "visible" : "none";
-    if (mapInstance.getLayer(satLayerId)) {
-      mapInstance.setLayoutProperty(satLayerId, "visibility", satVis);
-    }
-    for (const id of protomapsLayerIds()) {
-      if (mapInstance.getLayer(id)) {
-        mapInstance.setLayoutProperty(id, "visibility", protoVis);
-      }
-    }
-  }
   function setBasemap(which) {
-    toggleProtomapsVis(map, "satellite-layer", which === "proto");
-    document.getElementById("bm-esri").classList.toggle("active", which === "proto");
+    const cfg = BASEMAPS[which];
+    if (!cfg) return;
+    const src = map.getSource("basemap");
+    if (src && src.setTiles) src.setTiles(cfg.tiles);
+    document.getElementById("bm-esri").classList.toggle("active", which === "esri");
     document.getElementById("bm-sat").classList.toggle("active", which === "sat");
   }
-  document.getElementById("bm-esri").addEventListener("click", () => setBasemap("proto"));
+  document.getElementById("bm-esri").addEventListener("click", () => setBasemap("esri"));
   document.getElementById("bm-sat").addEventListener("click", () => setBasemap("sat"));
 
   // ============================================================
@@ -1273,19 +1231,12 @@
     container: "map-val",
     style: {
       version: 8,
-      glyphs: PROTOMAPS_GLYPHS,
-      sprite: PROTOMAPS_SPRITE,
       sources: {
-        protomaps: {
-          type: "vector",
-          url: "pmtiles://" + PROTOMAPS_BASEMAP_URL,
-          attribution: "© <a href=\"https://protomaps.com\">Protomaps</a> © <a href=\"https://openstreetmap.org\">OpenStreetMap</a>"
-        },
-        satellite: {
+        basemap: {
           type: "raster",
-          tiles: BASEMAPS.sat.tiles,
+          tiles: BASEMAPS.esri.tiles,
           tileSize: 256,
-          attribution: BASEMAPS.sat.attribution
+          attribution: BASEMAPS.esri.attribution
         },
         "validation": {
           type: "vector",
@@ -1293,8 +1244,7 @@
         }
       },
       layers: [
-        { id: "satellite-layer", type: "raster", source: "satellite", layout: { visibility: "none" }, paint: { "raster-opacity": 1.0 } },
-        ...protomapsBasemapLayers(),
+        { id: "basemap-layer", type: "raster", source: "basemap", paint: { "raster-opacity": 1.0 } },
         {
           id: "val-points-halo",
           type: "circle",
@@ -1352,11 +1302,13 @@
   mapVal.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: "metric" }), "bottom-right");
 
   function setBasemapVal(which) {
-    toggleProtomapsVis(mapVal, "satellite-layer", which === "proto");
-    document.getElementById("bm-esri-val").classList.toggle("active", which === "proto");
+    const cfg = BASEMAPS[which]; if (!cfg) return;
+    const src = mapVal.getSource("basemap");
+    if (src && src.setTiles) src.setTiles(cfg.tiles);
+    document.getElementById("bm-esri-val").classList.toggle("active", which === "esri");
     document.getElementById("bm-sat-val").classList.toggle("active", which === "sat");
   }
-  document.getElementById("bm-esri-val").addEventListener("click", () => setBasemapVal("proto"));
+  document.getElementById("bm-esri-val").addEventListener("click", () => setBasemapVal("esri"));
   document.getElementById("bm-sat-val").addEventListener("click", () => setBasemapVal("sat"));
 
   function setValRenderMode(mode) {
