@@ -63,24 +63,6 @@ All vector tiles are hosted on the project's own server at
 | `validation_points_z3_z13_nodrop.pmtiles` | 3–13 | Manually-checked validation points (Part B) |
 | `china_provinces_validation_z3_z13.pmtiles` | 3–13 | Province polygons with baked-in 8-class and 29-class metrics |
 
-### Rebuilding the PMTiles
-
-Two small Python pipelines are included for reproducibility:
-
-- `build_bfmi_pmtiles.py` — pulls only `bfvol12o1` from the source shapefile, renames it to `BFMI`,
-  reprojects to EPSG:4326, then runs `tippecanoe -Z 6 -z 11 --no-feature-limit --drop-rate=0
-  --coalesce-densest-as-needed`. Finally SFTP-uploads the result.
-- `build_province_pmtiles.py` — joins the province polygon shapefile with per-province metrics
-  computed from `validation.gpkg` (Cohen's kappa + macro Precision/Recall/F1 done by hand). Both
-  8-class and 29-class metric sets are baked in as `OA_8`/`OA_29` etc., then `tippecanoe -Z 3 -z 13
-  --no-feature-limit --drop-rate=0`.
-
-Both scripts read the server credentials from `data_server.txt`.
-
-Dependencies: `tippecanoe`, `ogr2ogr` (GDAL), `python3-paramiko`.
-
----
-
 ## Tech
 
 - Single static page — no build system, no bundler.
