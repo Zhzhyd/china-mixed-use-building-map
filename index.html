@@ -703,6 +703,8 @@
       assigned reference labels <b>BF1<sub>v</sub></b> and <b>BF2<sub>v</sub></b>. The map below shows
       every validation point, colored by the human-checked label. Click a point to compare the
       model prediction (BF1, BF2) against the manual reference (BF1<sub>v</sub>, BF2<sub>v</sub>).
+      Provinces are tinted by their overall accuracy (OA) and can be clicked to reveal the per-province
+      precision, recall, F1-score and Cohen's Kappa.
     </p>
     <div class="metric-row">
       <div class="metric"><span class="k">Contextual Overall Accuracy (BF1)</span><span class="v">87.99%</span></div>
@@ -728,6 +730,10 @@
             <label class="check-row">
               <input type="checkbox" id="show-points-val" checked />
               Show validation points
+            </label>
+            <label class="check-row" style="margin-top:6px;">
+              <input type="checkbox" id="show-provinces-val" checked />
+              Show provinces (OA)
             </label>
           </div>
         </div>
@@ -1341,7 +1347,10 @@
   // ============================================================
   const VALIDATION_PMTILES_URL =
     "https://www.nolimitopia.com/cbmf_pmtiles/validation_points_z3_z13_nodrop.pmtiles";
+  const PROVINCES_PMTILES_URL =
+    "https://www.nolimitopia.com/cbmf_pmtiles/china_provinces_validation_z3_z13.pmtiles";
   protocol.add(new pmtiles.PMTiles(VALIDATION_PMTILES_URL));
+  protocol.add(new pmtiles.PMTiles(PROVINCES_PMTILES_URL));
 
   const exprValBF1  = bf1Expression("BF1_v");
   const exprValBF12 = bf12Expression("BF1_v", "BF2_v");
@@ -1360,10 +1369,50 @@
         "validation": {
           type: "vector",
           url: "pmtiles://" + VALIDATION_PMTILES_URL
+        },
+        "provinces": {
+          type: "vector",
+          url: "pmtiles://" + PROVINCES_PMTILES_URL
         }
       },
       layers: [
         { id: "basemap-layer", type: "raster", source: "basemap", paint: { "raster-opacity": 1.0 } },
+        {
+          id: "province-fill",
+          type: "fill",
+          source: "provinces",
+          "source-layer": "provinces",
+          paint: {
+            "fill-color": [
+              "case",
+              ["==", ["get", "has_val"], 1],
+              [
+                "interpolate", ["linear"], ["get", "OA"],
+                0.65, "#5e3a8a",
+                0.78, "#f1c40f",
+                0.92, "#2ec4b6"
+              ],
+              "#3a4256"
+            ],
+            "fill-opacity": [
+              "interpolate", ["linear"], ["zoom"],
+              3, 0.55,
+              7, 0.45,
+              12, 0.25
+            ]
+          }
+        },
+        {
+          id: "province-outline",
+          type: "line",
+          source: "provinces",
+          "source-layer": "provinces",
+          paint: {
+            "line-color": "#cfd6e6",
+            "line-opacity": 0.35,
+            "line-width": 0.6
+          }
+        },
         {
           id: "val-points-halo",
           type: "circle",
@@ -1443,7 +1492,21 @@
 
   function updateLegendVal(mode) {
     const el = document.getElementById("legend-content-val");
-    let html = "";
+    // Province OA color ramp (always shown, matches province-fill interpolate stops)
+    let html = `
+      <div style="font-size:11px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin:0 0 4px;">
+        Province OA
+      </div>
+      <div style="height:9px;border-radius:3px;margin-bottom:3px;
+        background:linear-gradient(to right,#5e3a8a 0%,#f1c40f 50%,#2ec4b6 100%);
+        border:1px solid rgba(255,255,255,0.08);"></div>
+      <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-2);margin-bottom:10px;">
+        <span>0.65</span><span>0.78</span><span>0.92</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin-bottom:4px;">
+        Points
+      </div>
+    `;
     if (mode === "BF1") {
       for (const cat of Object.keys(BF1_COLORS)) html += legendItem(BF1_COLORS[cat], cat);
       html += legendItem(BF1_OTHER_COLOR, "Other / unmatched");
@@ -1487,6 +1550,38 @@
       if (mapVal.getLayer(id)) mapVal.setLayoutProperty(id, "visibility", vis);
     }
   });
+  document.getElementById("show-provinces-val").addEventListener("change", function () {
+    const vis = this.checked ? "visible" : "none";
+    for (const id of ["province-fill", "province-outline"]) {
+      if (mapVal.getLayer(id)) mapVal.setLayoutProperty(id, "visibility", vis);
+    }
+  });
+
+  mapVal.on("click", "province-fill", function (e) {
+    if (!e.features || !e.features.length) return;
+    const p = e.features[0].properties;
+    const fmt = v => (v === undefined || v === null || v === "") ? "—" :
+      (typeof v === "number" ? v.toFixed(4) : v);
+    const pct = v => (v === undefined || v === null || v === "") ? "—" :
+      (typeof v === "number" ? (v * 100).toFixed(2) + "%" : v);
+    let html;
+    if (Number(p.has_val) === 1) {
+      html = `
+        <div><b>${p.pr_name ?? "—"}</b></div>
+        Overall Accuracy: ${pct(Number(p.OA))}<br/>
+        Cohen's Kappa: ${fmt(Number(p.Kappa))}<br/>
+        Precision (macro): ${fmt(Number(p.Precision))}<br/>
+        Recall (macro): ${fmt(Number(p.Recall))}<br/>
+        F1-score (macro): ${fmt(Number(p.F1_score))}<br/>
+        Samples: ${p.support ?? "—"} (correct ${p.correct ?? "—"})
+      `;
+    } else {
+      html = `<div><b>${p.pr_name ?? "—"}</b></div>No validation samples in this province.`;
+    }
+    new maplibregl.Popup({ closeButton: true }).setLngLat(e.lngLat).setHTML(html).addTo(mapVal);
+  });
+  mapVal.on("mouseenter", "province-fill", () => { mapVal.getCanvas().style.cursor = "pointer"; });
+  mapVal.on("mouseleave", "province-fill", () => { mapVal.getCanvas().style.cursor = ""; });
   mapVal.on("zoomend", updateStatusVal);
   mapVal.on("moveend", updateStatusVal);
   mapVal.on("load", function () {
