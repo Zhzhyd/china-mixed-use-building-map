@@ -1202,7 +1202,7 @@
   // 14. Validation map (Part B) — point pmtiles, manual labels
   // ============================================================
   const VALIDATION_PMTILES_URL =
-    "https://www.nolimitopia.com/cbmf_pmtiles/validation_points_z6_z13.pmtiles";
+    "https://www.nolimitopia.com/cbmf_pmtiles/validation_points_z3_z13_nodrop.pmtiles";
   protocol.add(new pmtiles.PMTiles(VALIDATION_PMTILES_URL));
 
   const exprValBF1  = bf1Expression("BF1_v");
@@ -1248,9 +1248,9 @@
       ]
     },
     center: [104, 36],
-    zoom: 4,
+    zoom: 3,
     minZoom: 3,
-    maxZoom: 14
+    maxZoom: 15
   });
 
   mapVal.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
