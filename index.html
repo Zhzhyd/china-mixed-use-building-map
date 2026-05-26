@@ -1563,6 +1563,19 @@
     `;
     new maplibregl.Popup({ closeButton: true }).setLngLat(lngLat).setHTML(html).addTo(mapVal);
   }
+  const PROVINCE_CN_TO_EN = {
+    "北京市":"Beijing","天津市":"Tianjin","河北省":"Hebei","山西省":"Shanxi",
+    "内蒙古自治区":"Inner Mongolia","辽宁省":"Liaoning","吉林省":"Jilin",
+    "黑龙江省":"Heilongjiang","上海市":"Shanghai","江苏省":"Jiangsu",
+    "浙江省":"Zhejiang","安徽省":"Anhui","福建省":"Fujian","江西省":"Jiangxi",
+    "山东省":"Shandong","河南省":"Henan","湖北省":"Hubei","湖南省":"Hunan",
+    "广东省":"Guangdong","广西壮族自治区":"Guangxi","海南省":"Hainan",
+    "重庆市":"Chongqing","四川省":"Sichuan","贵州省":"Guizhou","云南省":"Yunnan",
+    "西藏自治区":"Tibet","陕西省":"Shaanxi","甘肃省":"Gansu","青海省":"Qinghai",
+    "宁夏回族自治区":"Ningxia","新疆维吾尔自治区":"Xinjiang","台湾省":"Taiwan",
+    "香港特别行政区":"Hong Kong","澳门特别行政区":"Macau"
+  };
+
   function popupForProvince(lngLat, p) {
     const fmt = v => (v === undefined || v === null || v === "" || Number.isNaN(v))
       ? "—"
@@ -1577,7 +1590,7 @@
         ? "29-class joint (BF1×BF2)"
         : "8-class contextual (BF1)";
       html = `
-        <div><b>${p.pr_name ?? "—"}</b></div>
+        <div><b>${PROVINCE_CN_TO_EN[p.pr_name] || p.pr_name || "—"}</b></div>
         <div style="color:var(--text-2);font-size:11px;margin-bottom:4px;">${label}</div>
         Overall Accuracy: ${pct(Number(p["OA_"+tag]))}<br/>
         Cohen's Kappa: ${fmt(Number(p["Kappa_"+tag]))}<br/>
@@ -1587,7 +1600,7 @@
         Samples: ${p["support_"+tag] ?? "—"} (correct ${p["correct_"+tag] ?? "—"})
       `;
     } else {
-      html = `<div><b>${p.pr_name ?? "—"}</b></div>No validation samples in this province.`;
+      html = `<div><b>${PROVINCE_CN_TO_EN[p.pr_name] || p.pr_name || "—"}</b></div>No validation samples in this province.`;
     }
     new maplibregl.Popup({ closeButton: true }).setLngLat(lngLat).setHTML(html).addTo(mapVal);
   }
