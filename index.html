@@ -105,6 +105,36 @@
       hyphens: auto;
     }
 
+    .part-toggle {
+      display: inline-flex;
+      gap: 0;
+      padding: 4px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 6px 0 10px;
+    }
+    .part-toggle button {
+      background: transparent;
+      border: none;
+      color: var(--text-1);
+      padding: 7px 18px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 7px;
+      letter-spacing: 0.03em;
+    }
+    .part-toggle button.active {
+      background: var(--accent);
+      color: #0a0e1a;
+      font-weight: 600;
+    }
+
+    .part-pane { display: none; }
+    .part-pane.active { display: block; }
+
     section.block h3 {
       font-family: "Source Serif Pro", Georgia, serif;
       font-size: 17px;
@@ -214,8 +244,8 @@
       min-width: 0;
       margin-top: 0;
     }
-    .chart-row > .chart-block.chart-bf1-col  { flex: 3 1 0; }
-    .chart-row > .chart-block.chart-bf12-col { flex: 7 1 0; }
+    .chart-row > .chart-block.chart-bf1-col  { flex: 4 1 0; }
+    .chart-row > .chart-block.chart-bf12-col { flex: 6 1 0; }
     @media (max-width: 980px) {
       .chart-row { flex-direction: column; }
     }
@@ -516,6 +546,12 @@
   <section class="block">
     <h2>What this page shows</h2>
 
+    <div class="part-toggle" role="tablist">
+      <button id="part-btn-a" class="active" type="button">Part A · Atlas</button>
+      <button id="part-btn-b" type="button">Part B · Validation</button>
+    </div>
+
+    <div id="part-a" class="part-pane active">
     <h3><span class="subtag">Part A</span>Building function atlas</h3>
     <p>
       An interactive view of the nationwide atlas. Each building (or aggregated grid cell at coarse
@@ -579,7 +615,10 @@
       </div>
     </div>
 
-    <h3 style="margin-top:38px;"><span class="subtag">Part B</span>Manual accuracy validation</h3>
+    </div><!-- /#part-a -->
+
+    <div id="part-b" class="part-pane">
+    <h3 style="margin-top:8px;"><span class="subtag">Part B</span>Manual accuracy validation</h3>
     <p>
       To quantify how well the model recovers building function in the wild, <b>1,981</b> buildings
       drawn from a stratified national sample were manually inspected against sub-meter imagery and
@@ -670,6 +709,7 @@
       </div>
       <div class="chart-svg-wrap chart-fit"><svg id="chart-prov"></svg></div>
     </div>
+    </div><!-- /#part-b -->
   </section>
 
   <footer>
@@ -1610,6 +1650,31 @@
   wireChart('.metric-toggles[data-target="chart-bf1"]',  'chart-bf1',  BF1_CLASS_DATA,  { fitWidth: true, groupGap: 10, height: 240 });
   wireChart('.metric-toggles[data-target="chart-bf12"]', 'chart-bf12', BF12_CLASS_DATA, { fitWidth: true, groupGap: 5,  height: 240 });
   wireChart('.metric-toggles[data-target="chart-prov"]', 'chart-prov', PROVINCE_DATA,   { fitWidth: true, groupGap: 4,  height: 260 });
+
+  // ============================================================
+  // 16. Part A / Part B mutex toggle
+  // ============================================================
+  function showPart(which) {
+    const paneA = document.getElementById("part-a");
+    const paneB = document.getElementById("part-b");
+    const btnA  = document.getElementById("part-btn-a");
+    const btnB  = document.getElementById("part-btn-b");
+    paneA.classList.toggle("active", which === "a");
+    paneB.classList.toggle("active", which === "b");
+    btnA.classList.toggle("active",  which === "a");
+    btnB.classList.toggle("active",  which === "b");
+
+    // Maps need a resize() after their container becomes visible,
+    // otherwise the canvas stays at 0×0 and tiles do not render.
+    requestAnimationFrame(() => {
+      if (which === "a" && map) map.resize();
+      if (which === "b" && mapVal) mapVal.resize();
+      // Re-render charts (responsive ones rely on container width).
+      window.dispatchEvent(new Event("resize"));
+    });
+  }
+  document.getElementById("part-btn-a").addEventListener("click", () => showPart("a"));
+  document.getElementById("part-btn-b").addEventListener("click", () => showPart("b"));
 
   map.on("error", function (e) {
     const err = e && e.error ? e.error : e;
