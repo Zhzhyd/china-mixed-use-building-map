@@ -257,10 +257,6 @@
     .chart-svg-wrap.chart-fit {
       overflow-x: hidden;
     }
-    .chart-svg-wrap.chart-fit svg {
-      width: 100%;
-      height: auto;
-    }
     .chart-svg-wrap svg { display: block; }
     .chart-svg-wrap text { fill: var(--text-1); font-family: "Inter", sans-serif; }
     .chart-svg-wrap text.axis { fill: var(--text-2); font-size: 11px; }
@@ -504,6 +500,88 @@
       .page { width: 92%; }
       h1 { font-size: 30px; }
       .map-wrap { height: 580px; }
+    }
+
+    @media (max-width: 768px) {
+      html, body { font-size: 14px; }
+      .page { width: 94%; padding: 32px 0 56px; }
+
+      h1 { font-size: 24px; }
+      section.block h2 { font-size: 19px; }
+      section.block h3 { font-size: 15px; margin: 18px 0 8px; }
+
+      header.hero { padding-bottom: 20px; margin-bottom: 24px; }
+      .authors, .affil { font-size: 12px; }
+
+      section.block { margin-bottom: 26px; }
+      section.block p { font-size: 13.5px; line-height: 1.6; }
+
+      .pill-row { gap: 6px; }
+      .pill { font-size: 11px; padding: 3px 9px; }
+
+      .map-wrap { height: 460px; border-radius: 10px; }
+
+      /* Compact panel stack on phones */
+      #left-stack, #left-stack-val {
+        top: 8px; left: 8px; bottom: 8px;
+        width: 170px; gap: 6px;
+      }
+      .map-panel { padding: 8px 10px; font-size: 11.5px; border-radius: 8px; }
+      .map-panel .label { font-size: 10px; margin-bottom: 4px; }
+      #control-panel select,
+      #control-panel-val select { font-size: 12px; padding: 5px 6px; }
+      .ctrl-block { margin-bottom: 8px; }
+      .check-row { font-size: 11.5px; }
+      .legend-item { font-size: 11px; gap: 6px; padding: 1px 0; }
+      .legend-swatch { width: 11px; height: 11px; }
+
+      #overview-map { height: 100px; }
+
+      .basemap-toggle { top: 8px; right: 50px; padding: 3px; }
+      .basemap-toggle button { padding: 4px 9px; font-size: 11px; }
+
+      #status, #status-val {
+        bottom: 8px; right: 8px; min-width: 0;
+        font-size: 10.5px; padding: 6px 8px;
+      }
+      .maplibregl-ctrl-scale { font-size: 10px !important; }
+
+      .metric-row { gap: 8px; padding: 10px 12px; }
+      .metric-row .metric { min-width: 130px; }
+      .metric-row .metric .k { font-size: 10px; }
+      .metric-row .metric .v { font-size: 15px; }
+
+      .part-toggle button { padding: 6px 12px; font-size: 12px; }
+
+      .chart-svg-wrap.chart-fit { overflow-x: auto; }
+      .chart-block { padding: 12px 12px 10px; margin-top: 16px; }
+      .chart-block .chart-title { font-size: 14px; }
+      .chart-block .chart-sub { font-size: 11.5px; }
+      .metric-toggles { gap: 8px 12px; padding: 6px 8px; }
+      .metric-toggles label { font-size: 11.5px; }
+
+      footer { font-size: 11.5px; margin-top: 28px; padding-top: 16px; }
+    }
+
+    @media (max-width: 480px) {
+      .page { width: 96%; padding: 24px 0 44px; }
+      h1 { font-size: 20px; }
+      section.block h2 { font-size: 17px; }
+      .map-wrap { height: 420px; }
+
+      /* On phones the side panels eat the map; shrink further. */
+      #left-stack, #left-stack-val { width: 150px; }
+      .map-panel { padding: 6px 8px; }
+
+      /* Stack the headline metric cards. */
+      .metric-row { flex-direction: column; gap: 6px; }
+      .metric-row .metric { min-width: 0; width: 100%; }
+      .metric-row .metric .v { font-size: 14px; }
+
+      .part-toggle { width: 100%; justify-content: stretch; }
+      .part-toggle button { flex: 1; padding: 7px 8px; }
+
+      #overview-panel { display: none; } /* save room for the legend */
     }
   </style>
 </head>
@@ -1524,10 +1602,14 @@
 
     let innerW, barGroupW;
     if (opts.fitWidth) {
-      // Responsive: derive bar group width from container.
-      const containerW = Math.max(320, opts.containerW || 800);
-      innerW = containerW - margin.left - margin.right;
-      barGroupW = Math.max(6, (innerW - nCats * groupGap) / nCats);
+      // Responsive: derive bar group width from container; fall back to a
+      // minimum so labels remain legible — chart may then exceed the
+      // container, and its wrapper allows horizontal scrolling on phones.
+      const containerW = Math.max(280, opts.containerW || 800);
+      const availInner = containerW - margin.left - margin.right;
+      barGroupW = (availInner - nCats * groupGap) / nCats;
+      if (barGroupW < 6) barGroupW = 6;
+      innerW = Math.max(availInner, nCats * (barGroupW + groupGap));
     } else {
       barGroupW = Math.max(8, opts.barGroupW || 16);
       innerW = nCats * (barGroupW + groupGap);
@@ -1535,13 +1617,8 @@
 
     const totalW = innerW + margin.left + margin.right;
     const totalH = innerH + margin.top + margin.bottom;
-    if (opts.fitWidth) {
-      svg.removeAttribute("width");
-      svg.removeAttribute("height");
-    } else {
-      svg.setAttribute("width", totalW);
-      svg.setAttribute("height", totalH);
-    }
+    svg.setAttribute("width", totalW);
+    svg.setAttribute("height", totalH);
     svg.setAttribute("viewBox", `0 0 ${totalW} ${totalH}`);
 
     // Y axis grid + ticks 0..1
