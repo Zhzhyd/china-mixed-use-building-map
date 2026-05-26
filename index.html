@@ -1306,6 +1306,11 @@
     setBordersVisible(false);
     setVectorsVisible(true);
     updateStatus();
+    // The locator's initial box would otherwise still show the default
+    // ([104, 35]) until the user first pans the main map.
+    if (typeof overview !== "undefined" && overview.isStyleLoaded()) {
+      updateOverviewBox();
+    }
   });
 
   // ============================================================
@@ -1370,6 +1375,10 @@
       }
     });
     updateOverviewBox();
+    // Defer one more frame so that the main map has had a chance to lay
+    // its canvas out — getBounds() returns the placeholder default until
+    // the map's first internal resize.
+    requestAnimationFrame(() => requestAnimationFrame(updateOverviewBox));
   });
 
   function emptyPolygon() {
