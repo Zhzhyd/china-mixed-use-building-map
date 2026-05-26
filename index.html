@@ -206,9 +206,30 @@
       border: 1px solid rgba(255,255,255,0.1);
     }
 
+    .chart-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 22px;
+    }
+    .chart-row > .chart-block {
+      flex: 1 1 0;
+      min-width: 0;
+      margin-top: 0;
+    }
+    @media (max-width: 980px) {
+      .chart-row { flex-direction: column; }
+    }
+
     .chart-svg-wrap {
       width: 100%;
       overflow-x: auto;
+    }
+    .chart-svg-wrap.chart-fit {
+      overflow-x: hidden;
+    }
+    .chart-svg-wrap.chart-fit svg {
+      width: 100%;
+      height: auto;
     }
     .chart-svg-wrap svg { display: block; }
     .chart-svg-wrap text { fill: var(--text-1); font-family: "Inter", sans-serif; }
@@ -567,10 +588,10 @@
       model prediction (BF1, BF2) against the manual reference (BF1<sub>v</sub>, BF2<sub>v</sub>).
     </p>
     <div class="metric-row">
-      <div class="metric"><span class="k">Contextual OA (BF1)</span><span class="v">87.99%</span></div>
-      <div class="metric"><span class="k">Contextual κ (BF1)</span><span class="v">0.8485</span></div>
-      <div class="metric"><span class="k">Joint OA (BF1×BF2)</span><span class="v">83.34%</span></div>
-      <div class="metric"><span class="k">Joint κ (BF1×BF2)</span><span class="v">0.8211</span></div>
+      <div class="metric"><span class="k">Contextual Overall Accuracy (BF1)</span><span class="v">87.99%</span></div>
+      <div class="metric"><span class="k">Contextual Cohen's Kappa (BF1)</span><span class="v">0.8485</span></div>
+      <div class="metric"><span class="k">Joint Overall Accuracy (BF1×BF2)</span><span class="v">83.34%</span></div>
+      <div class="metric"><span class="k">Joint Cohen's Kappa (BF1×BF2)</span><span class="v">0.8211</span></div>
       <div class="metric"><span class="k">Validated samples</span><span class="v">1,981</span></div>
     </div>
 
@@ -611,41 +632,43 @@
       </div>
     </div>
 
-    <div class="chart-block">
-      <div class="chart-title">Per-class accuracy — 8 BF1 categories (contextual)</div>
-      <div class="chart-sub">Performance evaluated against manual labels on 1,981 validated buildings (single-axis BF1).</div>
-      <div class="metric-toggles" data-target="chart-bf1">
-        <label><input type="checkbox" value="Precision"><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
-        <label><input type="checkbox" value="Recall"><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
-        <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
-        <label><input type="checkbox" value="Kappa"><span class="swatch" style="background:#B388EB"></span>Kappa</label>
+    <div class="chart-row">
+      <div class="chart-block">
+        <div class="chart-title">Per-class accuracy — 8 BF1 categories (contextual)</div>
+        <div class="chart-sub">Performance evaluated against manual labels on 1,981 validated buildings (single-axis BF1).</div>
+        <div class="metric-toggles" data-target="chart-bf1">
+          <label><input type="checkbox" value="Precision" checked><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
+          <label><input type="checkbox" value="Recall" checked><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
+          <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
+          <label><input type="checkbox" value="Kappa" checked><span class="swatch" style="background:#B388EB"></span>Kappa</label>
+        </div>
+        <div class="chart-svg-wrap"><svg id="chart-bf1"></svg></div>
       </div>
-      <div class="chart-svg-wrap"><svg id="chart-bf1"></svg></div>
-    </div>
 
-    <div class="chart-block">
-      <div class="chart-title">Per-class accuracy — 29 BF1×BF2 joint combinations</div>
-      <div class="chart-sub">Full Context–Intrinsic combination space (Supplementary Table S1).</div>
-      <div class="metric-toggles" data-target="chart-bf12">
-        <label><input type="checkbox" value="Precision"><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
-        <label><input type="checkbox" value="Recall"><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
-        <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
-        <label><input type="checkbox" value="Kappa"><span class="swatch" style="background:#B388EB"></span>Kappa</label>
+      <div class="chart-block">
+        <div class="chart-title">Per-class accuracy — 29 BF1×BF2 joint combinations</div>
+        <div class="chart-sub">Full Context–Intrinsic combination space (Supplementary Table S1).</div>
+        <div class="metric-toggles" data-target="chart-bf12">
+          <label><input type="checkbox" value="Precision" checked><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
+          <label><input type="checkbox" value="Recall" checked><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
+          <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
+          <label><input type="checkbox" value="Kappa" checked><span class="swatch" style="background:#B388EB"></span>Kappa</label>
+        </div>
+        <div class="chart-svg-wrap"><svg id="chart-bf12"></svg></div>
       </div>
-      <div class="chart-svg-wrap"><svg id="chart-bf12"></svg></div>
     </div>
 
     <div class="chart-block">
       <div class="chart-title">Province-level accuracy (29-class evaluation)</div>
-      <div class="chart-sub">Macro-averaged metrics within each province; OA and κ overall.</div>
+      <div class="chart-sub">Macro-averaged metrics within each province; Overall Accuracy and Cohen's Kappa shown overall.</div>
       <div class="metric-toggles" data-target="chart-prov">
-        <label><input type="checkbox" value="OA"><span class="swatch" style="background:#F1C40F"></span>OA</label>
-        <label><input type="checkbox" value="Precision"><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
-        <label><input type="checkbox" value="Recall"><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
+        <label><input type="checkbox" value="OA" checked><span class="swatch" style="background:#F1C40F"></span>Overall Accuracy</label>
+        <label><input type="checkbox" value="Precision" checked><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
+        <label><input type="checkbox" value="Recall" checked><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
         <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
-        <label><input type="checkbox" value="Kappa"><span class="swatch" style="background:#B388EB"></span>Kappa</label>
+        <label><input type="checkbox" value="Kappa" checked><span class="swatch" style="background:#B388EB"></span>Kappa</label>
       </div>
-      <div class="chart-svg-wrap"><svg id="chart-prov"></svg></div>
+      <div class="chart-svg-wrap chart-fit"><svg id="chart-prov"></svg></div>
     </div>
   </section>
 
@@ -1273,6 +1296,26 @@
         { id: "satellite-layer", type: "raster", source: "satellite", layout: { visibility: "none" }, paint: { "raster-opacity": 1.0 } },
         ...protomapsBasemapLayers(),
         {
+          id: "val-points-halo",
+          type: "circle",
+          source: "validation",
+          "source-layer": "validation_points",
+          paint: {
+            "circle-color": exprValBF1,
+            "circle-radius": [
+              "interpolate", ["linear"], ["zoom"],
+              3, 6,
+              5, 7,
+              8, 9,
+              12, 13,
+              15, 22
+            ],
+            "circle-blur": 0.9,
+            "circle-opacity": 0.45,
+            "circle-stroke-width": 0
+          }
+        },
+        {
           id: "val-points",
           type: "circle",
           source: "validation",
@@ -1281,14 +1324,20 @@
             "circle-color": exprValBF1,
             "circle-radius": [
               "interpolate", ["linear"], ["zoom"],
-              3, 3,
-              5, 3.5,
-              8, 4.5,
-              12, 6,
-              15, 10
+              3, 2.8,
+              5, 3.2,
+              8, 4.2,
+              12, 5.5,
+              15, 9
             ],
-            "circle-stroke-width": 0,
-            "circle-opacity": 0.95
+            "circle-stroke-color": "rgba(255,255,255,0.85)",
+            "circle-stroke-width": [
+              "interpolate", ["linear"], ["zoom"],
+              3, 0.4,
+              8, 0.7,
+              15, 1.1
+            ],
+            "circle-opacity": 1.0
           }
         }
       ]
@@ -1312,8 +1361,11 @@
 
   function setValRenderMode(mode) {
     if (!mapVal.getLayer("val-points")) return;
-    mapVal.setPaintProperty("val-points", "circle-color",
-      mode === "BF12" ? exprValBF12 : exprValBF1);
+    const expr = mode === "BF12" ? exprValBF12 : exprValBF1;
+    mapVal.setPaintProperty("val-points", "circle-color", expr);
+    if (mapVal.getLayer("val-points-halo")) {
+      mapVal.setPaintProperty("val-points-halo", "circle-color", expr);
+    }
     updateLegendVal(mode);
     updateStatusVal();
   }
@@ -1359,8 +1411,9 @@
     setValRenderMode(this.value);
   });
   document.getElementById("show-points-val").addEventListener("change", function () {
-    if (mapVal.getLayer("val-points")) {
-      mapVal.setLayoutProperty("val-points", "visibility", this.checked ? "visible" : "none");
+    const vis = this.checked ? "visible" : "none";
+    for (const id of ["val-points", "val-points-halo"]) {
+      if (mapVal.getLayer(id)) mapVal.setLayoutProperty(id, "visibility", vis);
     }
   });
   mapVal.on("zoomend", updateStatusVal);
@@ -1471,16 +1524,31 @@
     const cats = data.map(d => d.k);
     const nCats = cats.length;
     const nMetrics = metrics.length;
-    const barGroupW = Math.max(24, opts.barGroupW || 28);
-    const barGap = 2;
-    const groupGap = 12;
-    const margin = { top: 12, right: 18, bottom: 70, left: 44 };
-    const innerW = nCats * (barGroupW + groupGap);
+    const barGap = 1;
+    const groupGap = opts.groupGap != null ? opts.groupGap : 8;
+    const margin = { top: 12, right: 14, bottom: 70, left: 40 };
     const innerH = opts.height || 230;
+
+    let innerW, barGroupW;
+    if (opts.fitWidth) {
+      // Responsive: derive bar group width from container.
+      const containerW = Math.max(320, opts.containerW || 800);
+      innerW = containerW - margin.left - margin.right;
+      barGroupW = Math.max(6, (innerW - nCats * groupGap) / nCats);
+    } else {
+      barGroupW = Math.max(8, opts.barGroupW || 16);
+      innerW = nCats * (barGroupW + groupGap);
+    }
+
     const totalW = innerW + margin.left + margin.right;
     const totalH = innerH + margin.top + margin.bottom;
-    svg.setAttribute("width", totalW);
-    svg.setAttribute("height", totalH);
+    if (opts.fitWidth) {
+      svg.removeAttribute("width");
+      svg.removeAttribute("height");
+    } else {
+      svg.setAttribute("width", totalW);
+      svg.setAttribute("height", totalH);
+    }
     svg.setAttribute("viewBox", `0 0 ${totalW} ${totalH}`);
 
     // Y axis grid + ticks 0..1
@@ -1566,19 +1634,29 @@
   }
 
   function wireChart(toggleSel, svgId, data, opts) {
+    const wrap = document.getElementById(svgId).parentElement;
+    const isFit = opts && opts.fitWidth;
     const update = () => {
       const metrics = getSelectedMetrics(toggleSel);
-      renderBarChart(svgId, data, metrics, opts);
+      const o = Object.assign({}, opts);
+      if (isFit) o.containerW = wrap.clientWidth || 800;
+      renderBarChart(svgId, data, metrics, o);
     };
     document.querySelectorAll(`${toggleSel} input[type=checkbox]`).forEach(cb => {
       cb.addEventListener('change', update);
     });
+    if (isFit && window.ResizeObserver) {
+      const ro = new ResizeObserver(update);
+      ro.observe(wrap);
+    } else {
+      window.addEventListener('resize', update);
+    }
     update();
   }
 
-  wireChart('.metric-toggles[data-target="chart-bf1"]',  'chart-bf1',  BF1_CLASS_DATA,  { barGroupW: 56, height: 240 });
-  wireChart('.metric-toggles[data-target="chart-bf12"]', 'chart-bf12', BF12_CLASS_DATA, { barGroupW: 30, height: 240 });
-  wireChart('.metric-toggles[data-target="chart-prov"]', 'chart-prov', PROVINCE_DATA,   { barGroupW: 28, height: 260 });
+  wireChart('.metric-toggles[data-target="chart-bf1"]',  'chart-bf1',  BF1_CLASS_DATA,  { barGroupW: 26, groupGap: 8,  height: 240 });
+  wireChart('.metric-toggles[data-target="chart-bf12"]', 'chart-bf12', BF12_CLASS_DATA, { barGroupW: 14, groupGap: 4,  height: 240 });
+  wireChart('.metric-toggles[data-target="chart-prov"]', 'chart-prov', PROVINCE_DATA,   { fitWidth: true,  groupGap: 4, height: 260 });
 
   map.on("error", function (e) {
     const err = e && e.error ? e.error : e;
