@@ -1387,7 +1387,7 @@
               "case",
               ["==", ["get", "has_val"], 1],
               [
-                "interpolate", ["linear"], ["get", "OA"],
+                "interpolate", ["linear"], ["get", "OA_8"],
                 0.65, "#5e3a8a",
                 0.78, "#f1c40f",
                 0.92, "#2ec4b6"
@@ -1479,12 +1479,36 @@
   document.getElementById("bm-esri-val").addEventListener("click", () => setBasemapVal("esri"));
   document.getElementById("bm-sat-val").addEventListener("click", () => setBasemapVal("sat"));
 
+  // The two OA fields baked into the province pmtiles. Switching render
+  // mode swaps which field drives the colour ramp (and the click popup).
+  function provinceFillExpr(field) {
+    return [
+      "case",
+      ["==", ["get", "has_val"], 1],
+      [
+        "interpolate", ["linear"], ["get", field],
+        0.65, "#5e3a8a",
+        0.78, "#f1c40f",
+        0.92, "#2ec4b6"
+      ],
+      "#3a4256"
+    ];
+  }
+  const PROV_FILL_BF1  = provinceFillExpr("OA_8");
+  const PROV_FILL_BF12 = provinceFillExpr("OA_29");
+  let currentValMode = "BF1";
+
   function setValRenderMode(mode) {
+    currentValMode = mode;
     if (!mapVal.getLayer("val-points")) return;
     const expr = mode === "BF12" ? exprValBF12 : exprValBF1;
     mapVal.setPaintProperty("val-points", "circle-color", expr);
     if (mapVal.getLayer("val-points-halo")) {
       mapVal.setPaintProperty("val-points-halo", "circle-color", expr);
+    }
+    if (mapVal.getLayer("province-fill")) {
+      mapVal.setPaintProperty("province-fill", "fill-color",
+        mode === "BF12" ? PROV_FILL_BF12 : PROV_FILL_BF1);
     }
     updateLegendVal(mode);
     updateStatusVal();
@@ -1493,9 +1517,10 @@
   function updateLegendVal(mode) {
     const el = document.getElementById("legend-content-val");
     // Province OA color ramp (always shown, matches province-fill interpolate stops)
+    const modeLabel = mode === "BF12" ? "Province OA (29-class)" : "Province OA (8-class)";
     let html = `
       <div style="font-size:11px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin:0 0 4px;">
-        Province OA
+        ${modeLabel}
       </div>
       <div style="height:9px;border-radius:3px;margin-bottom:3px;
         background:linear-gradient(to right,#5e3a8a 0%,#f1c40f 50%,#2ec4b6 100%);
@@ -1526,9 +1551,9 @@
       `Mode: <span class="em">${mode}</span>`;
   }
 
-  mapVal.on("click", "val-points", function (e) {
-    if (!e.features || !e.features.length) return;
-    const p = e.features[0].properties;
+  // Generic click handler that always prefers a validation point over a
+  // province polygon when they overlap (points sit on top visually).
+  function popupForPoint(lngLat, p) {
     const html = `
       <div><b>Validation point</b></div>
       BF1 (predicted): ${p.BF1 ?? "—"}<br/>
@@ -1536,10 +1561,54 @@
       BF1<sub>v</sub> (manual): ${p.BF1_v ?? "—"}<br/>
       BF2<sub>v</sub> (manual): ${p.BF2_v ?? "—"}
     `;
-    new maplibregl.Popup({ closeButton: true }).setLngLat(e.lngLat).setHTML(html).addTo(mapVal);
+    new maplibregl.Popup({ closeButton: true }).setLngLat(lngLat).setHTML(html).addTo(mapVal);
+  }
+  function popupForProvince(lngLat, p) {
+    const fmt = v => (v === undefined || v === null || v === "" || Number.isNaN(v))
+      ? "—"
+      : (typeof v === "number" ? v.toFixed(4) : v);
+    const pct = v => (v === undefined || v === null || v === "" || Number.isNaN(v))
+      ? "—"
+      : (typeof v === "number" ? (v * 100).toFixed(2) + "%" : v);
+    let html;
+    if (Number(p.has_val) === 1) {
+      const tag = currentValMode === "BF12" ? "29" : "8";
+      const label = currentValMode === "BF12"
+        ? "29-class joint (BF1×BF2)"
+        : "8-class contextual (BF1)";
+      html = `
+        <div><b>${p.pr_name ?? "—"}</b></div>
+        <div style="color:var(--text-2);font-size:11px;margin-bottom:4px;">${label}</div>
+        Overall Accuracy: ${pct(Number(p["OA_"+tag]))}<br/>
+        Cohen's Kappa: ${fmt(Number(p["Kappa_"+tag]))}<br/>
+        Precision (macro): ${fmt(Number(p["Precision_"+tag]))}<br/>
+        Recall (macro): ${fmt(Number(p["Recall_"+tag]))}<br/>
+        F1-score (macro): ${fmt(Number(p["F1_"+tag]))}<br/>
+        Samples: ${p["support_"+tag] ?? "—"} (correct ${p["correct_"+tag] ?? "—"})
+      `;
+    } else {
+      html = `<div><b>${p.pr_name ?? "—"}</b></div>No validation samples in this province.`;
+    }
+    new maplibregl.Popup({ closeButton: true }).setLngLat(lngLat).setHTML(html).addTo(mapVal);
+  }
+
+  mapVal.on("click", function (e) {
+    const feats = mapVal.queryRenderedFeatures(e.point, {
+      layers: ["val-points", "province-fill"].filter(id => mapVal.getLayer(id))
+    });
+    if (!feats || !feats.length) return;
+    const point = feats.find(f => f.layer.id === "val-points");
+    const prov  = feats.find(f => f.layer.id === "province-fill");
+    if (point)      popupForPoint(e.lngLat, point.properties);
+    else if (prov)  popupForProvince(e.lngLat, prov.properties);
   });
-  mapVal.on("mouseenter", "val-points", () => { mapVal.getCanvas().style.cursor = "pointer"; });
-  mapVal.on("mouseleave", "val-points", () => { mapVal.getCanvas().style.cursor = ""; });
+
+  mapVal.on("mousemove", function (e) {
+    const feats = mapVal.queryRenderedFeatures(e.point, {
+      layers: ["val-points", "province-fill"].filter(id => mapVal.getLayer(id))
+    });
+    mapVal.getCanvas().style.cursor = (feats && feats.length) ? "pointer" : "";
+  });
 
   document.getElementById("render-mode-val").addEventListener("change", function () {
     setValRenderMode(this.value);
@@ -1557,31 +1626,6 @@
     }
   });
 
-  mapVal.on("click", "province-fill", function (e) {
-    if (!e.features || !e.features.length) return;
-    const p = e.features[0].properties;
-    const fmt = v => (v === undefined || v === null || v === "") ? "—" :
-      (typeof v === "number" ? v.toFixed(4) : v);
-    const pct = v => (v === undefined || v === null || v === "") ? "—" :
-      (typeof v === "number" ? (v * 100).toFixed(2) + "%" : v);
-    let html;
-    if (Number(p.has_val) === 1) {
-      html = `
-        <div><b>${p.pr_name ?? "—"}</b></div>
-        Overall Accuracy: ${pct(Number(p.OA))}<br/>
-        Cohen's Kappa: ${fmt(Number(p.Kappa))}<br/>
-        Precision (macro): ${fmt(Number(p.Precision))}<br/>
-        Recall (macro): ${fmt(Number(p.Recall))}<br/>
-        F1-score (macro): ${fmt(Number(p.F1_score))}<br/>
-        Samples: ${p.support ?? "—"} (correct ${p.correct ?? "—"})
-      `;
-    } else {
-      html = `<div><b>${p.pr_name ?? "—"}</b></div>No validation samples in this province.`;
-    }
-    new maplibregl.Popup({ closeButton: true }).setLngLat(e.lngLat).setHTML(html).addTo(mapVal);
-  });
-  mapVal.on("mouseenter", "province-fill", () => { mapVal.getCanvas().style.cursor = "pointer"; });
-  mapVal.on("mouseleave", "province-fill", () => { mapVal.getCanvas().style.cursor = ""; });
   mapVal.on("zoomend", updateStatusVal);
   mapVal.on("moveend", updateStatusVal);
   mapVal.on("load", function () {
