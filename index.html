@@ -101,8 +101,122 @@
     section.block p {
       color: var(--text-1);
       margin: 0 0 12px;
-      max-width: 90ch;
+      text-align: justify;
+      hyphens: auto;
     }
+
+    section.block h3 {
+      font-family: "Source Serif Pro", Georgia, serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-0);
+      margin: 22px 0 10px;
+      letter-spacing: 0.01em;
+    }
+    section.block h3 .subtag {
+      color: var(--accent);
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-right: 10px;
+      padding: 2px 8px;
+      background: rgba(106,166,255,0.10);
+      border: 1px solid rgba(106,166,255,0.30);
+      border-radius: 4px;
+      vertical-align: middle;
+    }
+
+    .metric-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 14px 0 10px;
+      padding: 12px 16px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .metric-row .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 110px;
+    }
+    .metric-row .metric .k {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-2);
+      font-weight: 600;
+    }
+    .metric-row .metric .v {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent-2);
+      font-family: "Source Serif Pro", Georgia, serif;
+    }
+
+    .chart-block {
+      margin-top: 22px;
+      padding: 18px 18px 16px;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .chart-block .chart-title {
+      font-family: "Source Serif Pro", Georgia, serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-0);
+      margin-bottom: 4px;
+    }
+    .chart-block .chart-sub {
+      font-size: 12.5px;
+      color: var(--text-2);
+      margin-bottom: 10px;
+    }
+    .metric-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .metric-toggles label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--text-1);
+      cursor: pointer;
+      user-select: none;
+    }
+    .metric-toggles input[type=checkbox] { accent-color: var(--accent); }
+    .metric-toggles .swatch {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .chart-svg-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .chart-svg-wrap svg { display: block; }
+    .chart-svg-wrap text { fill: var(--text-1); font-family: "Inter", sans-serif; }
+    .chart-svg-wrap text.axis { fill: var(--text-2); font-size: 11px; }
+    .chart-svg-wrap text.cat { fill: var(--text-1); font-size: 11px; }
+    .chart-svg-wrap line.grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2,3; }
+    .chart-svg-wrap line.axis { stroke: var(--border); stroke-width: 1; }
+    .chart-svg-wrap rect.bar { transition: opacity 0.15s; }
+    .chart-svg-wrap rect.bar:hover { opacity: 0.7; }
 
     .pill-row {
       display: flex;
@@ -133,7 +247,7 @@
       box-shadow: 0 14px 40px rgba(0,0,0,0.55);
     }
 
-    #map { width: 100%; height: 100%; background: var(--bg-1); }
+    #map, #map-val { width: 100%; height: 100%; background: var(--bg-1); }
 
     /* MapLibre control restyle for dark mode */
     .maplibregl-ctrl-group {
@@ -194,7 +308,7 @@
       margin-bottom: 6px;
     }
 
-    #left-stack {
+    #left-stack, #left-stack-val {
       position: absolute;
       top: 14px;
       left: 14px;
@@ -206,18 +320,19 @@
       gap: 10px;
       pointer-events: none; /* let map handle clicks in gaps */
     }
-    #left-stack > .map-panel {
+    #left-stack > .map-panel,
+    #left-stack-val > .map-panel {
       position: static;
       width: 100%;
       pointer-events: auto;
     }
 
-    #control-panel { flex: 0 0 auto; }
+    #control-panel, #control-panel-val { flex: 0 0 auto; }
     #overview-panel {
       flex: 0 0 auto;
       padding: 8px 8px 6px;
     }
-    #legend {
+    #legend, #legend-val {
       flex: 1 1 auto;
       min-height: 60px;
       max-height: none;
@@ -238,7 +353,8 @@
     #overview-map .maplibregl-canvas-container { cursor: crosshair !important; }
     #overview-map .maplibregl-ctrl-attrib { display: none !important; }
 
-    #control-panel select {
+    #control-panel select,
+    #control-panel-val select {
       width: 100%;
       background: var(--bg-3);
       color: var(--text-0);
@@ -249,7 +365,8 @@
       font-size: 13px;
       outline: none;
     }
-    #control-panel select:focus { border-color: var(--accent); }
+    #control-panel select:focus,
+    #control-panel-val select:focus { border-color: var(--accent); }
 
     .ctrl-block { margin-bottom: 12px; }
     .ctrl-block:last-child { margin-bottom: 0; }
@@ -295,8 +412,8 @@
       font-weight: 600;
     }
 
-    #legend::-webkit-scrollbar { width: 6px; }
-    #legend::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    #legend::-webkit-scrollbar, #legend-val::-webkit-scrollbar { width: 6px; }
+    #legend::-webkit-scrollbar-thumb, #legend-val::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
     .legend-item {
       display: flex;
@@ -314,14 +431,14 @@
       border: 1px solid rgba(255,255,255,0.08);
     }
 
-    #status {
+    #status, #status-val {
       bottom: 14px;
       right: 14px;
       color: var(--text-1);
       font-size: 12px;
       min-width: 200px;
     }
-    #status .em { color: var(--accent-2); font-weight: 600; }
+    #status .em, #status-val .em { color: var(--accent-2); font-weight: 600; }
 
     footer {
       margin-top: 48px;
@@ -376,6 +493,8 @@
 
   <section class="block">
     <h2>What this page shows</h2>
+
+    <h3><span class="subtag">Part A</span>Building function atlas</h3>
     <p>
       An interactive view of the nationwide atlas. Each building (or aggregated grid cell at coarse
       zoom) carries a <b>two-tier functional label</b>:
@@ -390,12 +509,8 @@
       housing embedded in an industrial park. Use the render-mode selector to color by BF1 alone, or
       by the joint BF1+BF2 combination that drives the analysis.
     </p>
-  </section>
 
-  <section class="block">
-    <h2>Interactive map</h2>
-
-    <div class="map-wrap">
+    <div class="map-wrap" style="margin-top:16px;">
       <div id="map"></div>
 
       <div id="left-stack">
@@ -440,6 +555,96 @@
         <div class="label">Status</div>
         <div id="status-body">Initialising map…</div>
       </div>
+    </div>
+
+    <h3 style="margin-top:38px;"><span class="subtag">Part B</span>Manual accuracy validation</h3>
+    <p>
+      To quantify how well the model recovers building function in the wild, <b>1,981</b> buildings
+      drawn from a stratified national sample were manually inspected against sub-meter imagery and
+      assigned reference labels <b>BF1<sub>v</sub></b> and <b>BF2<sub>v</sub></b>. The map below shows
+      every validation point, colored by the human-checked label. Click a point to compare the
+      model prediction (BF1, BF2) against the manual reference (BF1<sub>v</sub>, BF2<sub>v</sub>).
+    </p>
+    <div class="metric-row">
+      <div class="metric"><span class="k">Contextual OA (BF1)</span><span class="v">87.99%</span></div>
+      <div class="metric"><span class="k">Contextual κ (BF1)</span><span class="v">0.8485</span></div>
+      <div class="metric"><span class="k">Joint OA (BF1×BF2)</span><span class="v">83.34%</span></div>
+      <div class="metric"><span class="k">Joint κ (BF1×BF2)</span><span class="v">0.8211</span></div>
+      <div class="metric"><span class="k">Validated samples</span><span class="v">1,981</span></div>
+    </div>
+
+    <div class="map-wrap" style="margin-top:16px;">
+      <div id="map-val"></div>
+
+      <div id="left-stack-val">
+        <div id="control-panel-val" class="map-panel">
+          <div class="ctrl-block">
+            <div class="label">Render mode</div>
+            <select id="render-mode-val">
+              <option value="BF1">BF1ᵥ — contextual (manual)</option>
+              <option value="BF12">BF1ᵥ + BF2ᵥ — joint (manual)</option>
+            </select>
+          </div>
+          <div class="ctrl-block">
+            <label class="check-row">
+              <input type="checkbox" id="show-points-val" checked />
+              Show validation points
+            </label>
+          </div>
+        </div>
+
+        <div id="legend-val" class="map-panel">
+          <div class="label">Legend</div>
+          <div id="legend-content-val"></div>
+        </div>
+      </div>
+
+      <div class="basemap-toggle map-panel" role="tablist">
+        <button id="bm-esri-val" class="active" type="button">Esri Dark</button>
+        <button id="bm-sat-val" type="button">Satellite</button>
+      </div>
+
+      <div id="status-val" class="map-panel">
+        <div class="label">Status</div>
+        <div id="status-body-val">Initialising validation map…</div>
+      </div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">Per-class accuracy — 8 BF1 categories (contextual)</div>
+      <div class="chart-sub">Performance evaluated against manual labels on 1,981 validated buildings (single-axis BF1).</div>
+      <div class="metric-toggles" data-target="chart-bf1">
+        <label><input type="checkbox" value="Precision"><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
+        <label><input type="checkbox" value="Recall"><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
+        <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
+        <label><input type="checkbox" value="Kappa"><span class="swatch" style="background:#B388EB"></span>Kappa</label>
+      </div>
+      <div class="chart-svg-wrap"><svg id="chart-bf1"></svg></div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">Per-class accuracy — 29 BF1×BF2 joint combinations</div>
+      <div class="chart-sub">Full Context–Intrinsic combination space (Supplementary Table S1).</div>
+      <div class="metric-toggles" data-target="chart-bf12">
+        <label><input type="checkbox" value="Precision"><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
+        <label><input type="checkbox" value="Recall"><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
+        <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
+        <label><input type="checkbox" value="Kappa"><span class="swatch" style="background:#B388EB"></span>Kappa</label>
+      </div>
+      <div class="chart-svg-wrap"><svg id="chart-bf12"></svg></div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">Province-level accuracy (29-class evaluation)</div>
+      <div class="chart-sub">Macro-averaged metrics within each province; OA and κ overall.</div>
+      <div class="metric-toggles" data-target="chart-prov">
+        <label><input type="checkbox" value="OA"><span class="swatch" style="background:#F1C40F"></span>OA</label>
+        <label><input type="checkbox" value="Precision"><span class="swatch" style="background:#6aa6ff"></span>Precision</label>
+        <label><input type="checkbox" value="Recall"><span class="swatch" style="background:#2EC4B6"></span>Recall</label>
+        <label><input type="checkbox" value="F1-score" checked><span class="swatch" style="background:#F4A261"></span>F1-score</label>
+        <label><input type="checkbox" value="Kappa"><span class="swatch" style="background:#B388EB"></span>Kappa</label>
+      </div>
+      <div class="chart-svg-wrap"><svg id="chart-prov"></svg></div>
     </div>
   </section>
 
@@ -992,6 +1197,344 @@
       essential: true
     });
   });
+
+  // ============================================================
+  // 14. Validation map (Part B) — point pmtiles, manual labels
+  // ============================================================
+  const VALIDATION_PMTILES_URL =
+    "https://www.nolimitopia.com/cbmf_pmtiles/validation_points_z6_z13.pmtiles";
+  protocol.add(new pmtiles.PMTiles(VALIDATION_PMTILES_URL));
+
+  const exprValBF1  = bf1Expression("BF1_v");
+  const exprValBF12 = bf12Expression("BF1_v", "BF2_v");
+
+  const mapVal = new maplibregl.Map({
+    container: "map-val",
+    style: {
+      version: 8,
+      sources: {
+        basemap: {
+          type: "raster",
+          tiles: BASEMAPS.esri.tiles,
+          tileSize: 256,
+          attribution: BASEMAPS.esri.attribution
+        },
+        "validation": {
+          type: "vector",
+          url: "pmtiles://" + VALIDATION_PMTILES_URL
+        }
+      },
+      layers: [
+        { id: "basemap-layer", type: "raster", source: "basemap", paint: { "raster-opacity": 1.0 } },
+        {
+          id: "val-points",
+          type: "circle",
+          source: "validation",
+          "source-layer": "validation_points",
+          paint: {
+            "circle-color": exprValBF1,
+            "circle-radius": [
+              "interpolate", ["linear"], ["zoom"],
+              4, 2,
+              8, 3.5,
+              12, 6,
+              14, 9
+            ],
+            "circle-stroke-color": "#0a0e1a",
+            "circle-stroke-width": 1,
+            "circle-opacity": 0.95
+          }
+        }
+      ]
+    },
+    center: [104, 36],
+    zoom: 4,
+    minZoom: 3,
+    maxZoom: 14
+  });
+
+  mapVal.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+  mapVal.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: "metric" }), "bottom-right");
+
+  function setBasemapVal(which) {
+    const cfg = BASEMAPS[which]; if (!cfg) return;
+    const src = mapVal.getSource("basemap");
+    if (src && src.setTiles) src.setTiles(cfg.tiles);
+    document.getElementById("bm-esri-val").classList.toggle("active", which === "esri");
+    document.getElementById("bm-sat-val").classList.toggle("active", which === "sat");
+  }
+  document.getElementById("bm-esri-val").addEventListener("click", () => setBasemapVal("esri"));
+  document.getElementById("bm-sat-val").addEventListener("click", () => setBasemapVal("sat"));
+
+  function setValRenderMode(mode) {
+    if (!mapVal.getLayer("val-points")) return;
+    mapVal.setPaintProperty("val-points", "circle-color",
+      mode === "BF12" ? exprValBF12 : exprValBF1);
+    updateLegendVal(mode);
+    updateStatusVal();
+  }
+
+  function updateLegendVal(mode) {
+    const el = document.getElementById("legend-content-val");
+    let html = "";
+    if (mode === "BF1") {
+      for (const cat of Object.keys(BF1_COLORS)) html += legendItem(BF1_COLORS[cat], cat);
+      html += legendItem(BF1_OTHER_COLOR, "Other / unmatched");
+    } else {
+      for (const c of BF12_COMBOS) html += legendItem(c.color, c.key);
+      html += legendItem(BF12_OTHER_COLOR, "Other");
+    }
+    el.innerHTML = html;
+  }
+
+  function updateStatusVal() {
+    const z = mapVal.getZoom();
+    const mode = document.getElementById("render-mode-val").value;
+    document.getElementById("status-body-val").innerHTML =
+      `Layer: <span class="em">Validation points</span><br/>` +
+      `Zoom: <span class="em">${z.toFixed(2)}</span><br/>` +
+      `Mode: <span class="em">${mode}</span>`;
+  }
+
+  mapVal.on("click", "val-points", function (e) {
+    if (!e.features || !e.features.length) return;
+    const p = e.features[0].properties;
+    const html = `
+      <div><b>Validation point</b></div>
+      BF1 (predicted): ${p.BF1 ?? "—"}<br/>
+      BF2 (predicted): ${p.BF2 ?? "—"}<br/>
+      BF1<sub>v</sub> (manual): ${p.BF1_v ?? "—"}<br/>
+      BF2<sub>v</sub> (manual): ${p.BF2_v ?? "—"}
+    `;
+    new maplibregl.Popup({ closeButton: true }).setLngLat(e.lngLat).setHTML(html).addTo(mapVal);
+  });
+  mapVal.on("mouseenter", "val-points", () => { mapVal.getCanvas().style.cursor = "pointer"; });
+  mapVal.on("mouseleave", "val-points", () => { mapVal.getCanvas().style.cursor = ""; });
+
+  document.getElementById("render-mode-val").addEventListener("change", function () {
+    setValRenderMode(this.value);
+  });
+  document.getElementById("show-points-val").addEventListener("change", function () {
+    if (mapVal.getLayer("val-points")) {
+      mapVal.setLayoutProperty("val-points", "visibility", this.checked ? "visible" : "none");
+    }
+  });
+  mapVal.on("zoomend", updateStatusVal);
+  mapVal.on("moveend", updateStatusVal);
+  mapVal.on("load", function () {
+    setValRenderMode("BF1");
+    updateStatusVal();
+  });
+
+  // ============================================================
+  // 15. Validation results data + charts
+  // ============================================================
+  const BF1_CLASS_DATA = [
+    {k:"A", label:"Administrative", Precision:0.6667, Recall:0.6000, "F1-score":0.6316, Kappa:0.6280, support:20},
+    {k:"C", label:"Commercial",     Precision:0.8234, Recall:0.9031, "F1-score":0.8614, Kappa:0.8332, support:320},
+    {k:"E", label:"Education",      Precision:0.8338, Recall:0.9576, "F1-score":0.8914, Kappa:0.8719, support:283},
+    {k:"I", label:"Industrial",     Precision:0.9291, Recall:0.8055, "F1-score":0.8629, Kappa:0.8411, support:293},
+    {k:"M", label:"Medical",        Precision:0.5323, Recall:0.9167, "F1-score":0.6735, Kappa:0.6658, support:36},
+    {k:"P", label:"Public",         Precision:0.8326, Recall:0.9534, "F1-score":0.8889, Kappa:0.8760, support:193},
+    {k:"R", label:"Residential",    Precision:0.9799, Recall:0.8591, "F1-score":0.9155, Kappa:0.8704, support:738},
+    {k:"T", label:"Transport",      Precision:0.8155, Recall:0.8571, "F1-score":0.8358, Kappa:0.8271, support:98}
+  ];
+
+  const BF12_CLASS_DATA = [
+    {k:"A-A", Precision:0.6667, Recall:0.6000, "F1-score":0.6316, Kappa:0.6280, support:20},
+    {k:"C-A", Precision:0.7971, Recall:1.0000, "F1-score":0.8871, Kappa:0.8835, support:55},
+    {k:"C-C", Precision:0.7771, Recall:0.7394, "F1-score":0.7578, Kappa:0.7363, support:165},
+    {k:"C-I", Precision:0.8197, Recall:1.0000, "F1-score":0.9009, Kappa:0.8981, support:50},
+    {k:"C-T", Precision:0.7656, Recall:0.9800, "F1-score":0.8596, Kappa:0.8556, support:50},
+    {k:"E-C", Precision:0.8276, Recall:0.9474, "F1-score":0.8834, Kappa:0.8785, support:76},
+    {k:"E-E", Precision:0.7561, Recall:0.7470, "F1-score":0.7515, Kappa:0.7407, support:83},
+    {k:"E-I", Precision:0.7321, Recall:1.0000, "F1-score":0.8454, Kappa:0.8416, support:41},
+    {k:"E-P", Precision:0.8214, Recall:1.0000, "F1-score":0.9020, Kappa:0.9007, support:23},
+    {k:"E-R", Precision:0.8367, Recall:0.8723, "F1-score":0.8542, Kappa:0.8505, support:47},
+    {k:"E-T", Precision:0.5652, Recall:1.0000, "F1-score":0.7222, Kappa:0.7199, support:13},
+    {k:"I-A", Precision:0.7500, Recall:1.0000, "F1-score":0.8571, Kappa:0.8549, support:27},
+    {k:"I-C", Precision:0.9510, Recall:0.8435, "F1-score":0.8940, Kappa:0.8879, support:115},
+    {k:"I-I", Precision:0.8804, Recall:0.6136, "F1-score":0.7232, Kappa:0.7072, support:132},
+    {k:"I-T", Precision:0.7500, Recall:0.9474, "F1-score":0.8372, Kappa:0.8354, support:19},
+    {k:"M-M", Precision:0.5323, Recall:0.9167, "F1-score":0.6735, Kappa:0.6658, support:36},
+    {k:"P-C", Precision:0.8333, Recall:0.9524, "F1-score":0.8889, Kappa:0.8850, support:63},
+    {k:"P-I", Precision:0.8333, Recall:0.9615, "F1-score":0.8929, Kappa:0.8913, support:26},
+    {k:"P-P", Precision:0.7143, Recall:0.8333, "F1-score":0.7692, Kappa:0.7654, support:30},
+    {k:"P-R", Precision:0.8000, Recall:0.9091, "F1-score":0.8511, Kappa:0.8475, support:44},
+    {k:"P-T", Precision:0.8824, Recall:1.0000, "F1-score":0.9375, Kappa:0.9365, support:30},
+    {k:"R-A", Precision:0.7808, Recall:1.0000, "F1-score":0.8769, Kappa:0.8728, support:57},
+    {k:"R-C", Precision:0.9907, Recall:0.8045, "F1-score":0.8880, Kappa:0.8808, support:133},
+    {k:"R-I", Precision:0.8511, Recall:0.9524, "F1-score":0.8989, Kappa:0.8966, support:42},
+    {k:"R-M", Precision:0.7308, Recall:1.0000, "F1-score":0.8444, Kappa:0.8409, support:38},
+    {k:"R-R", Precision:0.9672, Recall:0.7330, "F1-score":0.8340, Kappa:0.7944, support:442},
+    {k:"R-T", Precision:0.8125, Recall:1.0000, "F1-score":0.8966, Kappa:0.8950, support:26},
+    {k:"T-C", Precision:0.8068, Recall:0.9103, "F1-score":0.8554, Kappa:0.8491, support:78},
+    {k:"T-T", Precision:0.8000, Recall:0.6000, "F1-score":0.6857, Kappa:0.6830, support:20}
+  ];
+
+  // Province-level (excluding "未知"/Unknown). OA / κ / macro P / macro R / macro F1.
+  const PROVINCE_DATA = [
+    {k:"Beijing",        OA:0.7812, Kappa:0.7654, Precision:0.9118, Recall:0.8578, "F1-score":0.8569, support:32},
+    {k:"Tianjin",        OA:0.8333, Kappa:0.8065, Precision:0.8333, Recall:0.8333, "F1-score":0.8333, support:6},
+    {k:"Hebei",          OA:0.7683, Kappa:0.7531, Precision:0.7962, Recall:0.8303, "F1-score":0.7804, support:82},
+    {k:"Shanxi",         OA:0.8246, Kappa:0.8091, Precision:0.9296, Recall:0.8926, "F1-score":0.8999, support:57},
+    {k:"Inner Mongolia", OA:0.8033, Kappa:0.7860, Precision:0.7451, Recall:0.8463, "F1-score":0.7674, support:61},
+    {k:"Liaoning",       OA:0.8267, Kappa:0.8124, Precision:0.8987, Recall:0.9284, "F1-score":0.8931, support:75},
+    {k:"Jilin",          OA:0.9048, Kappa:0.8958, Precision:0.9118, Recall:0.9493, "F1-score":0.9198, support:42},
+    {k:"Heilongjiang",   OA:0.8611, Kappa:0.8495, Precision:0.8319, Recall:0.9063, "F1-score":0.8478, support:72},
+    {k:"Shanghai",       OA:0.8462, Kappa:0.8292, Precision:0.8429, Recall:0.7857, "F1-score":0.8016, support:26},
+    {k:"Jiangsu",        OA:0.7684, Kappa:0.7521, Precision:0.7361, Recall:0.8496, "F1-score":0.7407, support:95},
+    {k:"Zhejiang",       OA:0.8354, Kappa:0.8257, Precision:0.8364, Recall:0.9059, "F1-score":0.8293, support:79},
+    {k:"Anhui",          OA:0.8472, Kappa:0.8321, Precision:0.8843, Recall:0.9210, "F1-score":0.8896, support:72},
+    {k:"Fujian",         OA:0.8814, Kappa:0.8718, Precision:0.8924, Recall:0.9053, "F1-score":0.8923, support:59},
+    {k:"Jiangxi",        OA:0.8657, Kappa:0.8541, Precision:0.8277, Recall:0.9045, "F1-score":0.8495, support:67},
+    {k:"Shandong",       OA:0.8113, Kappa:0.7969, Precision:0.8170, Recall:0.8761, "F1-score":0.8173, support:106},
+    {k:"Henan",          OA:0.7959, Kappa:0.7743, Precision:0.8344, Recall:0.9211, "F1-score":0.8552, support:98},
+    {k:"Hubei",          OA:0.7000, Kappa:0.6714, Precision:0.7786, Recall:0.8142, "F1-score":0.7648, support:90},
+    {k:"Hunan",          OA:0.9041, Kappa:0.8954, Precision:0.9278, Recall:0.9667, "F1-score":0.9322, support:73},
+    {k:"Guangdong",      OA:0.8374, Kappa:0.8249, Precision:0.8650, Recall:0.8949, "F1-score":0.8611, support:123},
+    {k:"Guangxi",        OA:0.8333, Kappa:0.8207, Precision:0.7891, Recall:0.8884, "F1-score":0.8038, support:90},
+    {k:"Hainan",         OA:0.8784, Kappa:0.8655, Precision:0.8241, Recall:0.8946, "F1-score":0.8261, support:74},
+    {k:"Chongqing",      OA:0.8462, Kappa:0.8231, Precision:0.8333, Recall:0.8519, "F1-score":0.8296, support:13},
+    {k:"Sichuan",        OA:0.8478, Kappa:0.8279, Precision:0.8127, Recall:0.8942, "F1-score":0.8315, support:92},
+    {k:"Guizhou",        OA:0.8837, Kappa:0.8712, Precision:0.9132, Recall:0.9316, "F1-score":0.9080, support:43},
+    {k:"Yunnan",         OA:0.7846, Kappa:0.7595, Precision:0.8538, Recall:0.8737, "F1-score":0.8320, support:65},
+    {k:"Tibet",          OA:0.8889, Kappa:0.8636, Precision:0.9167, Recall:0.9444, "F1-score":0.9111, support:9},
+    {k:"Shaanxi",        OA:0.8600, Kappa:0.8455, Precision:0.8860, Recall:0.9123, "F1-score":0.8877, support:50},
+    {k:"Gansu",          OA:0.9079, Kappa:0.9008, Precision:0.9257, Recall:0.9363, "F1-score":0.9157, support:76},
+    {k:"Qinghai",        OA:0.8125, Kappa:0.7876, Precision:0.8636, Recall:0.8909, "F1-score":0.8687, support:16},
+    {k:"Ningxia",        OA:0.8421, Kappa:0.8119, Precision:0.9722, Recall:0.9127, "F1-score":0.9286, support:19},
+    {k:"Xinjiang",       OA:0.9024, Kappa:0.8928, Precision:0.9179, Recall:0.9552, "F1-score":0.9220, support:82},
+    {k:"Hong Kong",      OA:0.9000, Kappa:0.8851, Precision:0.8750, Recall:0.8750, "F1-score":0.8750, support:10},
+    {k:"Macau",          OA:0.6923, Kappa:0.6510, Precision:0.8222, Recall:0.7593, "F1-score":0.7487, support:13},
+    {k:"Taiwan",         OA:0.9000, Kappa:0.8837, Precision:1.0000, Recall:0.9286, "F1-score":0.9524, support:10}
+  ];
+
+  const METRIC_COLORS = {
+    "Precision": "#6aa6ff",
+    "Recall":    "#2EC4B6",
+    "F1-score":  "#F4A261",
+    "Kappa":     "#B388EB",
+    "OA":        "#F1C40F"
+  };
+
+  function renderBarChart(svgId, data, metrics, opts) {
+    opts = opts || {};
+    const svg = document.getElementById(svgId);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const NS = "http://www.w3.org/2000/svg";
+
+    const cats = data.map(d => d.k);
+    const nCats = cats.length;
+    const nMetrics = metrics.length;
+    const barGroupW = Math.max(24, opts.barGroupW || 28);
+    const barGap = 2;
+    const groupGap = 12;
+    const margin = { top: 12, right: 18, bottom: 70, left: 44 };
+    const innerW = nCats * (barGroupW + groupGap);
+    const innerH = opts.height || 230;
+    const totalW = innerW + margin.left + margin.right;
+    const totalH = innerH + margin.top + margin.bottom;
+    svg.setAttribute("width", totalW);
+    svg.setAttribute("height", totalH);
+    svg.setAttribute("viewBox", `0 0 ${totalW} ${totalH}`);
+
+    // Y axis grid + ticks 0..1
+    const yMax = 1.0;
+    function yScale(v) { return margin.top + innerH - (v / yMax) * innerH; }
+    for (let t = 0; t <= 5; t++) {
+      const v = t / 5;
+      const y = yScale(v);
+      const grid = document.createElementNS(NS, "line");
+      grid.setAttribute("class", "grid");
+      grid.setAttribute("x1", margin.left); grid.setAttribute("x2", margin.left + innerW);
+      grid.setAttribute("y1", y); grid.setAttribute("y2", y);
+      svg.appendChild(grid);
+      const lbl = document.createElementNS(NS, "text");
+      lbl.setAttribute("class", "axis");
+      lbl.setAttribute("x", margin.left - 6);
+      lbl.setAttribute("y", y + 3);
+      lbl.setAttribute("text-anchor", "end");
+      lbl.textContent = v.toFixed(1);
+      svg.appendChild(lbl);
+    }
+
+    // Axis line
+    const ax = document.createElementNS(NS, "line");
+    ax.setAttribute("class", "axis");
+    ax.setAttribute("x1", margin.left); ax.setAttribute("x2", margin.left + innerW);
+    ax.setAttribute("y1", margin.top + innerH); ax.setAttribute("y2", margin.top + innerH);
+    svg.appendChild(ax);
+
+    if (nMetrics === 0) {
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("x", margin.left + innerW / 2);
+      t.setAttribute("y", margin.top + innerH / 2);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("class", "axis");
+      t.textContent = "Select at least one metric";
+      svg.appendChild(t);
+      return;
+    }
+
+    const subBarW = Math.max(2, (barGroupW - (nMetrics - 1) * barGap) / nMetrics);
+
+    data.forEach((d, i) => {
+      const gx = margin.left + i * (barGroupW + groupGap) + groupGap / 2;
+      metrics.forEach((m, j) => {
+        const v = d[m] ?? 0;
+        const x = gx + j * (subBarW + barGap);
+        const y = yScale(v);
+        const h = (margin.top + innerH) - y;
+        const r = document.createElementNS(NS, "rect");
+        r.setAttribute("class", "bar");
+        r.setAttribute("x", x);
+        r.setAttribute("y", y);
+        r.setAttribute("width", subBarW);
+        r.setAttribute("height", Math.max(0, h));
+        r.setAttribute("fill", METRIC_COLORS[m] || "#888");
+        r.setAttribute("rx", 1.5);
+        const title = document.createElementNS(NS, "title");
+        title.textContent = `${d.k}${d.label ? " ("+d.label+")" : ""}\n${m}: ${v.toFixed(4)}` +
+          (d.support !== undefined ? `\nn = ${d.support}` : "");
+        r.appendChild(title);
+        svg.appendChild(r);
+      });
+
+      // Category label
+      const lbl = document.createElementNS(NS, "text");
+      lbl.setAttribute("class", "cat");
+      const cx = gx + barGroupW / 2;
+      const cy = margin.top + innerH + 12;
+      lbl.setAttribute("x", cx);
+      lbl.setAttribute("y", cy);
+      lbl.setAttribute("text-anchor", "end");
+      lbl.setAttribute("transform", `rotate(-45, ${cx}, ${cy})`);
+      lbl.textContent = d.k;
+      svg.appendChild(lbl);
+    });
+  }
+
+  function getSelectedMetrics(containerSel) {
+    const wrap = document.querySelector(containerSel);
+    if (!wrap) return [];
+    return Array.from(wrap.querySelectorAll('input[type=checkbox]:checked')).map(el => el.value);
+  }
+
+  function wireChart(toggleSel, svgId, data, opts) {
+    const update = () => {
+      const metrics = getSelectedMetrics(toggleSel);
+      renderBarChart(svgId, data, metrics, opts);
+    };
+    document.querySelectorAll(`${toggleSel} input[type=checkbox]`).forEach(cb => {
+      cb.addEventListener('change', update);
+    });
+    update();
+  }
+
+  wireChart('.metric-toggles[data-target="chart-bf1"]',  'chart-bf1',  BF1_CLASS_DATA,  { barGroupW: 56, height: 240 });
+  wireChart('.metric-toggles[data-target="chart-bf12"]', 'chart-bf12', BF12_CLASS_DATA, { barGroupW: 30, height: 240 });
+  wireChart('.metric-toggles[data-target="chart-prov"]', 'chart-prov', PROVINCE_DATA,   { barGroupW: 28, height: 260 });
 
   map.on("error", function (e) {
     const err = e && e.error ? e.error : e;
